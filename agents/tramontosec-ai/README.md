@@ -1,42 +1,94 @@
-# TramontoSec AI — v0.2.1 (protótipo recuperado)
+# TramontoSec AI v0.3 Multi-Agent
 
-Ferramenta **local, assistiva e em Python** para organização de auditorias de segurança pelo framework acadêmico Tramonto. É um projeto no monorepositório `projetos-ia`.
+Auditoria local assistida pelo Tramonto, com três especialistas sequenciais,
+políticas externas ao modelo, evidências persistentes e revisão humana.
+Projeto acadêmico em Sistemas de Informação na UFOPA.
 
-> **Estado atual:** CLI e motor de evidências; **não** é ainda um sistema multiagente autônomo. Não faz pentest ativo, não dispara scanners automaticamente e não corrige infraestrutura.
+**Sem modelo habilitado, o processamento é determinístico e isso aparece nos resultados.**
+Ollama local é opcional. Não há pentest ativo, execução de scanners nem remediação
+automática. Testes funcionais não demonstram eficácia científica de detecção.
 
-## Funcionalidades existentes
+## Instalação no Windows
 
-- Catálogo de documentos e preservação de SHA-256 / períodos de avaliações.
-- Verificação referencial de caminhos, linhas e baselines Git em modo somente leitura.
-- Importação de metadados *sanitizados* de Semgrep, Trivy, Gitleaks e Zizmor; triagem humana.
-- Correlação conservadora de alertas com evidências por localização.
-- Registro de decisões humanas e geração de minuta Markdown.
-- Inventário preliminar de dependências relacionadas a IA (indícios, não diagnósticos).
-- Sugestões opcionais via **Ollama local**, apenas com metadados curtos, sem aceitar achados.
-
-## Instalação / execução (Python 3.11+)
-
-```bash
-cd agents/tramontosec-ai
-python -m unittest discover -s tests -v
-python -m tramontosec --help
-```
-
-Crie o workspace **fora de pastas sincronizadas**, em volume criptografado e com permissões adequadas, confirmados pelo auditor:
+Requisitos: Python 3.11+ e Git no PATH. Runtime somente com biblioteca padrão;
+setuptools é usado para empacotamento. PDF requer pypdf opcional.
 
 ```powershell
-$ws = Join-Path $env:LOCALAPPDATA 'TramontoSec-Auditorias'
-python -m tramontosec --workspace "$ws" init --ack-authorized-secure-storage
-python -m tramontosec --workspace "$ws" seed --file .\examples\demo_findings.json
-python -m tramontosec --workspace "$ws" list
+git clone https://github.com/MaraparaXD/projetos-ia.git
+cd projetos-ia\agents\tramontosec-ai
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe -m tramontosec --help
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Os dados demonstrativos são totalmente **fictícios**, não evidências de um sistema real.
+Também é possível executar diretamente `python -m tramontosec` na pasta do
+agente sem instalação. O layout `tramontosec/` preserva compatibilidade com o
+ZIP; não foi necessária migração para `src/`.
 
-## Segurança e limites
+## Demonstração offline e dashboard
 
-A opção de confirmação **não** verifica por si mesma BitLocker/EFS ou ACLs. Não inclua no Git público workspaces, bancos de auditoria, relatórios reais, logs, segredos ou conteúdos privados. O módulo de IA local precisa de consentimento explícito e não pode aprovar resultados.
+```powershell
+$ws = Join-Path $env:LOCALAPPDATA 'TramontoSec-Demo'
+.\.venv\Scripts\python.exe -m tramontosec --workspace "$ws" demo --ack-synthetic-review
+.\.venv\Scripts\python.exe -m tramontosec --workspace "$ws" audit --project aurora-demo
+.\.venv\Scripts\python.exe -m tramontosec --workspace "$ws" dashboard
+```
 
-Use `docs/metodologia.md` para o Tramonto e `docs/ROADMAP.md` para o desenvolvimento dos futuros agentes Red Team, Static Analysis e Blue Team.
+Abra o link privado de sessão exibido pela CLI. O servidor escuta somente em
+127.0.0.1; Ctrl+C encerra. Não exponha a porta. Para repetir a demonstração,
+escolha outro `--project`. A CLI funciona sem navegador.
 
-**Pesquisa científica:** apenas testes funcionais e fixtures sintéticas até o momento; não há métricas de eficácia de detecção de vulnerabilidades em produção.
+## Agentes e comandos
+
+| Perfil | Ferramenta | Capacidade atual |
+|---|---|---|
+| red | analyze_recon | Hipóteses passivas de exposição HTTP, SSH e banco; contraprovas |
+| static | analyze_static | Alertas por regra/arquivo/linha/commit; correlação conservadora |
+| blue | review_controls | Prioridade proposta, controles, mitigação, resposta a incidentes e validação; nada aplicado |
+
+Contratos versionados, ferramentas tipadas e memória por projeto implementam
+os perfis. No modo assistido, Ollama interpreta metadados e propõe ferramentas
+somente da allowlist. Nenhuma resposta do modelo vira decisão humana.
+
+```text
+project-create  projects        agents           audit
+plan            run             history          stage
+evidence-import baseline        analyze-local    finding-review
+task-cancel     report          models           demo       dashboard
+```
+
+Use `--help` em cada comando. Antes de `run`, o auditor atesta `adequacao`,
+`verificacao` e `preparacao`. Novas evidências invalidam Preparação e etapas
+posteriores. Planos antigos não aceitam alterações silenciosas: cancele com
+`task-cancel` e planeje novamente. [DEMO.md](DEMO.md) contém o fluxo completo.
+
+## Ollama opcional
+
+```powershell
+python -m tramontosec --workspace "$ws" models
+python -m tramontosec --workspace "$ws" plan --project aurora-demo --agent red
+python -m tramontosec --workspace "$ws" run --project aurora-demo --model NOME_LOCAL --ack-local-model
+```
+
+Instale modelos separadamente. O adaptador exige modelo GGUF local e bloqueia
+aliases cloud, proxies e redirects. Configure `OLLAMA_NO_CLOUD=1` **no servidor
+Ollama** e reinicie-o; uma variável na CLI não altera servidor já iniciado.
+Veja a [documentação oficial](https://docs.ollama.com/faq#how-do-i-disable-ollamas-cloud-features).
+São enviados somente metadados limitados (regras, severidades, serviços,
+controles, IDs e contagens), sem código, nomes de ativos, caminhos ou documentos.
+Falhas viram `deterministic_fallback`. Nenhum provedor externo é implementado.
+
+## Compatibilidade e limites
+
+Os comandos recuperados continuam disponíveis para workspaces legados.
+Não há migração automática de evidências antigas para projetos v0.3. Cada
+projeto usa banco separado em `<workspace>/projects/<id>/`.
+Guarde dados fora do Git e de pastas sincronizadas, com ACLs e volume protegido.
+SQLite não é cifrado pelo programa. A confirmação humana não verifica BitLocker
+nem autentica a identidade do auditor. Dashboard é apenas para um operador local.
+
+Documentos: [arquitetura](ARCHITECTURE.md), [agentes](AGENTS.md),
+[Tramonto](TRAMONTO.md), [segurança](SECURITY.md), [pesquisa](RESEARCH.md),
+[roadmap](ROADMAP.md), [changelog](CHANGELOG.md),
+[recuperação](docs/RECOVERY.md) e [validação](docs/VALIDATION.md).

@@ -1,0 +1,1 @@
+{"synthetic":true,"assets":[{"asset":"app.example.invalid","services":["http","ssh"],"controls":["logging"]}]}

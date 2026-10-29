@@ -1,0 +1,418 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T03:38:07.928946+00:00",
+  "title": "Design System: TramontoSec AI",
+  "extensions": {
+    "colorMeta": {
+      "black": {
+        "role": "primary",
+        "displayName": "Preto operacional",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Cinza de leitura",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Fundo claro",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Branco de superfície",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "soft": {
+        "role": "neutral",
+        "displayName": "Cinza suave",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Linha estrutural",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "control-line": {
+        "role": "neutral",
+        "displayName": "Contorno de campo",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "nav-active": {
+        "role": "neutral",
+        "displayName": "Carvão ativo",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "nav-text": {
+        "role": "neutral",
+        "displayName": "Texto de navegação",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "inverse-muted": {
+        "role": "neutral",
+        "displayName": "Legenda inversa",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "inverse-line": {
+        "role": "neutral",
+        "displayName": "Linha inversa",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Carvão de interação",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "selected-row": {
+        "role": "neutral",
+        "displayName": "Seleção discreta",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "review-line": {
+        "role": "neutral",
+        "displayName": "Linha de revisão",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "placeholder": {
+        "role": "neutral",
+        "displayName": "Texto de exemplo",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "current-caption": {
+        "role": "neutral",
+        "displayName": "Legenda da etapa atual",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Título principal do projeto."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Seções operacionais."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Subtítulos e grupos internos."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto base e leitura contínua."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rótulos persistentes de formulário."
+      },
+      "code": {
+        "displayName": "Código",
+        "purpose": "Código e identificadores técnicos."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "button-background",
+        "value": "background-color 150ms ease-out",
+        "purpose": "Resposta do botão somente em prefers-reduced-motion: no-preference."
+      },
+      {
+        "name": "detail-reveal",
+        "value": "200ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Clip-path de inset(0 0 12% 0) para inset(0), somente com movimento permitido."
+      },
+      {
+        "name": "scroll",
+        "value": "smooth",
+        "purpose": "Rolagem suave somente com movimento permitido; detalhe usa instant com redução."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-min",
+        "value": "1500px"
+      },
+      {
+        "name": "compact-max",
+        "value": "1200px"
+      },
+      {
+        "name": "mobile-max",
+        "value": "680px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Registrar decisão",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal de confirmação.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">Registrar decisão</button>",
+      "css": ".ds-button-primary{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;min-height:42px;padding:9px 15px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);cursor:pointer;background:var(--black);color:var(--surface);border-color:var(--black);}.ds-button-primary:hover:enabled{background: #333333;}.ds-button-primary:focus-visible{outline:2px solid var(--ink);outline-offset:4px;}.ds-button-primary:disabled{cursor:default;opacity:0.5;}@media(prefers-reduced-motion:no-preference){.ds-button-primary{transition:background-color 150ms ease-out;}}"
+    },
+    {
+      "name": "Exportar relatório",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Ação secundária de exportação.",
+      "html": "<button class=\"ds-button-outline\" type=\"button\">Exportar relatório</button>",
+      "css": ".ds-button-outline{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;min-height:42px;padding:9px 15px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);cursor:pointer;border-color:var(--black);white-space:nowrap;}.ds-button-outline:hover:enabled{background:var(--soft);}.ds-button-outline:focus-visible{outline:2px solid var(--ink);outline-offset:4px;}.ds-button-outline:disabled{cursor:default;opacity:0.5;}@media(prefers-reduced-motion:no-preference){.ds-button-outline{transition:background-color 150ms ease-out;}}"
+    },
+    {
+      "name": "Atualizar",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Ação contextual discreta.",
+      "html": "<button class=\"ds-button-quiet\" type=\"button\">Atualizar</button>",
+      "css": ".ds-button-quiet{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;min-height:42px;padding:9px 15px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);cursor:pointer;border:0;background:transparent;font-size:0.85rem;min-height:36px;}.ds-button-quiet:hover:enabled{background:var(--soft);}.ds-button-quiet:focus-visible{outline:2px solid var(--ink);outline-offset:4px;}.ds-button-quiet:disabled{cursor:default;opacity:0.5;}@media(prefers-reduced-motion:no-preference){.ds-button-quiet{transition:background-color 150ms ease-out;}}"
+    },
+    {
+      "name": "Campo de auditor",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Rótulo persistente e limite de campo distinto dos divisores.",
+      "html": "<label class=\"ds-field\">Auditor<input class=\"ds-input\" autocomplete=\"name\" required></label>",
+      "css": ".ds-field{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;display:block;font-size:0.84rem;font-weight:500;line-height:1.55;color:var(--ink);}.ds-input{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;display:block;font-size:15px;margin-top:6px;width:100%;padding:10px 12px;min-height:42px;border:1px solid var(--control-line);border-radius:4px;background:var(--surface);color:var(--ink);caret-color:var(--black);}.ds-input::placeholder{color:#6d6d6d;}.ds-input:focus-visible{outline:2px solid var(--ink);outline-offset:4px;}"
+    },
+    {
+      "name": "Navegação",
+      "kind": "nav",
+      "refersTo": "navigation-item",
+      "description": "Navegação escura com estado atual e adaptação para abas.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Principal\"><button class=\"ds-nav-item ds-current\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3 7V4h6l3 3h9v13H3Z\"/></svg>Projetos</button><button class=\"ds-nav-item\">Evidências</button><button class=\"ds-nav-item\">Histórico</button></nav>",
+      "css": ".ds-nav{display:grid;gap:8px;padding:18px;background:var(--black);}.ds-nav-item{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;display:flex;align-items:center;gap:14px;min-height:50px;padding:14px;border:0;border-radius:4px;text-align:left;background:transparent;color:#d8d8d8;font-size:15px;font-weight:500;cursor:pointer;}.ds-nav-item svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}.ds-nav-item.ds-current,.ds-nav-item:hover:enabled{background:#262626;color:var(--surface);}.ds-nav-item:focus-visible{outline:2px solid var(--surface);outline-offset:4px;}@media(prefers-reduced-motion:no-preference){.ds-nav-item{transition:background-color 150ms ease-out;}}@media(max-width:680px){.ds-nav{display:flex;gap:4px;padding:18px 16px 0;}.ds-nav-item{flex:1;justify-content:center;gap:8px;padding:10px 12px;min-height:44px;font-size:0.86rem;border-radius:4px 4px 0 0;}.ds-nav-item svg{width:18px;height:18px;}}"
+    },
+    {
+      "name": "Selos de estado",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Estados nomeados com fundo, contorno e texto riscado.",
+      "html": "<span class=\"ds-badge\">Candidata</span> <span class=\"ds-badge ds-review\">Em revisão</span> <span class=\"ds-badge ds-accepted\">Aceita pelo auditor</span> <span class=\"ds-badge ds-rejected\">Rejeitada</span>",
+      "css": ".ds-badge{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;display:inline-block;font-size:0.72rem;line-height:1.5;white-space:nowrap;padding:4px 9px;background:var(--soft);color:var(--ink);border-radius:20px;}.ds-review{border:1px solid #8d8d8d;background:var(--surface);}.ds-accepted{background:var(--black);color:var(--surface);}.ds-rejected{text-decoration:line-through;}@media(max-width:680px){.ds-badge{font-size:0.67rem;padding:3px 7px;}}"
+    },
+    {
+      "name": "Painel operacional",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Superfície plana para organizar evidências e revisão.",
+      "html": "<section class=\"ds-panel\"><h2 class=\"ds-panel-title\">Hipóteses para revisão</h2><p class=\"ds-panel-caption\">Alertas e hipóteses exigem evidência independente.</p></section>",
+      "css": ".ds-panel{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:22px;}.ds-panel-title{margin:0;font-size:1.35rem;font-weight:650;line-height:1.3;letter-spacing:-0.02em;}.ds-panel-caption{margin:8px 0 20px;font-size:0.9rem;line-height:1.55;color:var(--muted);}@media(max-width:680px){.ds-panel{padding:18px;}.ds-panel-title{font-size:1.23rem;}}"
+    },
+    {
+      "name": "Etapa atual",
+      "kind": "custom",
+      "refersTo": "stage-current",
+      "description": "Etapa do processo destacada por inversão e legenda.",
+      "html": "<ol class=\"ds-stages\"><li class=\"ds-stage-current\" aria-current=\"step\"><span class=\"ds-stage-number\">2</span><div class=\"ds-stage-copy\">Verificação<span>Revisão pendente</span></div></li></ol>",
+      "css": ".ds-stages{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}.ds-stage-current{display:flex;align-items:center;gap:10px;padding:18px 12px;background:var(--black);color:var(--surface);}.ds-stage-number{display:grid;place-items:center;width:32px;height:32px;flex-shrink:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--black);font-size:1rem;font-weight:650;}.ds-stage-copy{font-size:0.9rem;font-weight:600;line-height:1.4;}.ds-stage-copy span{display:block;margin-top:4px;font-size:0.74rem;font-weight:400;color:#d6d6d6;}@media(max-width:1200px){.ds-stage-current{display:block;padding:14px 10px;}.ds-stage-number{margin-bottom:8px;}}@media(max-width:680px){.ds-stage-current{display:flex;padding:10px 14px;}.ds-stage-number{margin:0;width:27px;height:27px;font-size:0.8rem;}.ds-stage-copy{display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px;font-size:0.83rem;}.ds-stage-copy span{margin:0;font-size:0.73rem;}}"
+    },
+    {
+      "name": "Bloco de evidência",
+      "kind": "custom",
+      "description": "Conteúdo técnico com origem e identificadores que quebram linha.",
+      "html": "<div class=\"ds-evidence\"><p>Análise: Static Analysis</p><p>Origem da evidência preservada.</p><p class=\"ds-digest\">SHA-256: identificador da evidência</p></div>",
+      "css": ".ds-evidence{font-family:\"Segoe UI\",Helvetica,Arial,sans-serif;margin:14px 0;padding:14px 16px;background:var(--soft);color:var(--ink);border-radius:4px;overflow-wrap:anywhere;font-size:0.83rem;line-height:1.55;}.ds-evidence p{margin:0;}.ds-evidence p+p{margin-top:5px;}.ds-digest{font-family:Consolas,monospace;font-size:0.76rem;word-break:break-all;color:var(--muted);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Operação monocromática",
+    "overview": "O sistema traduz a direção preto e branco, dinâmica e elegante em uma interface de trabalho sóbria. Tipografia com presença, grandes áreas claras e navegação preta estabelecem hierarquia sem competir com evidências e decisões humanas. O contraste e a densidade organizam a leitura; não há cor de destaque cromática.\n\nA sensação de movimento vem da troca de contexto, da inversão de tons nos estados e da revelação curta do detalhe. Painéis planos, contornos discretos e cantos levemente arredondados mantêm a interface precisa. A apresentação usa recursos locais, fontes do sistema e ícones SVG em linha, sem imagens raster, CDN ou fontes externas.",
+    "keyCharacteristics": [
+      "Monocromia com hierarquia por contraste, peso e espaço.",
+      "Superfícies planas, contornos funcionais e arredondamento contido.",
+      "Estados nomeados em português brasileiro e decisão humana explícita.",
+      "Movimento breve, condicionado à preferência de movimento do usuário."
+    ],
+    "rules": [
+      {
+        "name": "The Functional Boundary Rule",
+        "body": "Use `control-line` nos campos e `line` na estrutura. Uma linha estrutural suave não substitui o limite de um controle.",
+        "section": "colors"
+      },
+      {
+        "name": "The Named State Rule",
+        "body": "Identifique estados com texto e forma: aceito usa inversão, em revisão usa contorno e rejeitado usa texto riscado. Preserve a legenda; o tom sozinho não comunica a decisão.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat Surface Rule",
+        "body": "Preserve a separação por tom e contorno ao estender painéis. Estados de interação não dependem de elevação ou brilho.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** preservar a paleta monocromática e a hierarquia por contraste, tipografia e espaço.",
+      "**Do** usar `control-line` nos campos e reservar `line` para estrutura.",
+      "**Do** manter foco visível, rótulos persistentes e estados nomeados em português brasileiro.",
+      "**Do** adaptar navegação, etapas e formulários nos breakpoints existentes.",
+      "**Do** condicionar movimento à preferência do usuário e manter a leitura de evidências no contexto."
+    ],
+    "donts": [
+      "**Don't** acrescentar acentos cromáticos para comunicar estados já definidos pela monocromia.",
+      "**Don't** trocar contornos funcionais por divisores suaves ou remover o contorno de foco.",
+      "**Don't** introduzir sombras, blur, imagens raster, fontes externas ou dependências de CDN nesta interface.",
+      "**Don't** substituir rótulos de decisão por cor, ícone ou animação isolados."
+    ]
+  }
+}
