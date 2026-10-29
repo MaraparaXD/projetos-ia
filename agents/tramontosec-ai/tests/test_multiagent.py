@@ -53,6 +53,30 @@ class MultiAgentTest(unittest.TestCase):
         self.assertEqual(snapshot(self.ws, 'other')['evidence'], [])
         self.assertEqual(get_project(self.ws, 'lab')['scope']['active_testing'], False)
 
+    def test_symlink_cannot_bypass_project_boundary(self):
+        target = self.base / 'outside'; target.mkdir()
+        link = self.ws / 'projects' / 'escape'
+        try:
+            link.symlink_to(target, target_is_directory=True)
+        except OSError:
+            self.skipTest('SO não autorizou criação de symlink para este teste.')
+        with self.assertRaises(PermissionError):
+            get_project(self.ws, 'escape')
+
+    def test_no_evidence_from_other_project_in_agent_contract(self):
+        msg = TaskMessage('task', 'lab', Profile.RED, 'Test', 'execucao', ('lab-evidence',), allowed_tools(Profile.RED))
+        with self.assertRaises(PermissionError):
+            Specialist(Profile.RED).run(msg, [{'id': 'other-project-evidence'}], [])
+
+    def test_new_source_invalidates_previously_accepted_hypothesis(self):
+        self.prepare(); plan(self.ws, 'lab'); run(self.ws, 'lab')
+        key = snapshot(self.ws, 'lab')['hypotheses'][0]['id']
+        review_hypothesis(self.ws, 'lab', key, 'accepted', 'Auditor', 'Conferência sintética', True)
+        import_recon(self.ws, 'lab', self.recon(assets=[{'asset': 'app.example.invalid', 'services': ['http'], 'controls': ['tls']}]), True)
+        attest_stage(self.ws, 'lab', 'preparacao', 'Auditor', 'Novas evidências revistas', True)
+        plan(self.ws, 'lab'); run(self.ws, 'lab')
+        self.assertEqual(snapshot(self.ws, 'lab')['hypotheses'][0]['status'], 'candidate')
+
     def test_scope_requires_authorization_and_synthetic_domain(self):
         with self.assertRaises(PermissionError):
             create_project(self.ws, 'denied', 'X', 'Y', ['example.invalid'])

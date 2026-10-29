@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from http.cookies import SimpleCookie, CookieError
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import hmac
 import json
 from pathlib import Path
@@ -11,14 +11,14 @@ import sqlite3
 from urllib.parse import parse_qs, urlsplit
 
 from .contracts import identifier
-from .orchestrator import report_markdown, review_hypothesis
+from .orchestrator import export_project, review_hypothesis
 from .store import list_projects, snapshot
 
 WEB = Path(__file__).parent / 'web'
 CSP = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 
 
-class LocalServer(HTTPServer):
+class LocalServer(ThreadingHTTPServer):
     allow_reuse_address = True
 
     def __init__(self, workspace: Path, port: int):
@@ -85,6 +85,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self.boundary()
             url = urlsplit(self.path)
+            if url.path == '/favicon.ico':
+                self.send(204, b'', 'image/x-icon')
+                return
             static = {'/': ('index.html', 'text/html; charset=utf-8'),
                       '/app.css': ('app.css', 'text/css; charset=utf-8'),
                       '/app.js': ('app.js', 'text/javascript; charset=utf-8')}
@@ -100,7 +103,7 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path == '/api/project':
                     self.json(200, snapshot(self.server.workspace, project))
                 else:
-                    self.send(200, report_markdown(self.server.workspace, project).encode(), 'text/markdown; charset=utf-8')
+                    self.send(200, export_project(self.server.workspace, project).read_bytes(), 'text/markdown; charset=utf-8')
             else:
                 self.json(404, {'error': 'Recurso não encontrado.'})
         except PermissionError as exc:

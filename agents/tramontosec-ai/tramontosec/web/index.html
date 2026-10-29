@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TramontoSec AI — Auditorias</title>
+    <link rel="stylesheet" href="/app.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Ir para o conteúdo</a>
+    <aside class="sidebar" aria-label="Navegação principal">
+      <a class="brand" href="/">TramontoSec AI<span>v0.3 Multi-Agent</span></a>
+      <nav>
+        <button
+          class="nav-item active"
+          data-view="overview"
+          aria-current="page"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 7V4h6l3 3h9v13H3Z" /></svg
+          >Projetos
+        </button>
+        <button class="nav-item" data-view="evidence">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 3h8l4 4v14H6Z M14 3v5h4 M9 12h6 M9 16h6" /></svg
+          >Evidências
+        </button>
+        <button class="nav-item" data-view="history">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 11a9 9 0 1 1 2 7 M3 5v6h6 M12 7v6l4 2" /></svg
+          >Histórico
+        </button>
+      </nav>
+      <div class="local-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 4h18v13H3Z M8 21h8 M12 17v4" />
+        </svg>
+        <div>Modo local<span>Revisão humana em cada decisão</span></div>
+      </div>
+    </aside>
+    <main id="main">
+      <div class="project-bar">
+        <label for="project-select">Projeto</label
+        ><select id="project-select" aria-label="Selecionar projeto">
+          <option>Carregando projetos…</option></select
+        ><button id="refresh" class="quiet">Atualizar</button>
+      </div>
+      <header class="page-header">
+        <div>
+          <h1 id="project-title">Auditorias locais</h1>
+          <p id="objective">
+            Evidências, especialistas e decisões pelo Tramonto.
+          </p>
+        </div>
+        <button id="export" class="outline" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 3h8l4 4v14H6Z M14 3v5h4 M9 14h6 M12 11v6" /></svg
+          >Exportar relatório
+        </button>
+      </header>
+      <p id="notice" class="notice" hidden></p>
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+      <section id="empty" class="empty" hidden>
+        <h2>Comece com uma avaliação</h2>
+        <p>
+          Crie um projeto pela CLI ou execute a demonstração fictícia para
+          explorar as cinco etapas do Tramonto.
+        </p>
+        <code>python -m tramontosec --workspace PASTA_LOCAL demo</code>
+      </section>
+      <div id="audit-content" hidden>
+        <section aria-label="Etapas do Tramonto">
+          <ol id="stages" class="stages"></ol>
+        </section>
+        <section id="overview-view" class="view">
+          <div class="work-grid">
+            <section class="findings-panel" aria-labelledby="findings-title">
+              <div class="section-heading">
+                <h2 id="findings-title">Hipóteses para revisão</h2>
+                <span id="finding-count" class="count"></span>
+              </div>
+              <p class="subtle">
+                Alertas e hipóteses exigem evidência independente.
+              </p>
+              <div class="table-wrap">
+                <table>
+                  <caption class="sr-only">
+                    Hipóteses e decisões do auditor
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Hipótese</th>
+                      <th scope="col">Origem</th>
+                      <th scope="col">Estado</th>
+                      <th scope="col"><span class="sr-only">Ação</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="findings"></tbody>
+                </table>
+              </div>
+              <p id="no-findings" class="subtle" hidden>
+                Nenhuma hipótese registrada. Planeje e execute uma análise
+                autorizada pela CLI.
+              </p>
+            </section>
+            <aside class="specialists-panel">
+              <section>
+                <h2>Especialistas</h2>
+                <ul id="specialists" class="specialists"></ul>
+              </section>
+              <section class="mode-panel">
+                <h3 id="processing-mode">Processamento determinístico</h3>
+                <p id="model-note">Sem modelo local habilitado.</p>
+              </section>
+              <p class="subtle policy-note">
+                Operação passiva. Nenhum agente aplica correções.
+              </p>
+            </aside>
+          </div>
+          <section
+            id="detail"
+            class="detail"
+            hidden
+            aria-labelledby="detail-title"
+          >
+            <h2 id="detail-title" tabindex="-1">Evidências e contraprovas</h2>
+            <h3 id="selected-title"></h3>
+            <div id="evidence-detail"></div>
+            <p id="uncertainty" class="subtle"></p>
+            <h3>Controles a conferir</h3>
+            <ul id="controls"></ul>
+            <div id="blue-advice"></div>
+            <p id="last-decision" class="subtle"></p>
+          </section>
+          <section
+            id="review-panel"
+            class="review-panel"
+            hidden
+            aria-labelledby="review-title"
+          >
+            <div>
+              <h2 id="review-title">Revisão humana</h2>
+              <p id="review-lock" class="subtle" hidden>
+                Avaliação finalizada; decisões bloqueadas.
+              </p>
+              <p class="subtle">
+                Registre o fundamento da sua decisão. Concordância entre agentes
+                não confirma vulnerabilidade.
+              </p>
+            </div>
+            <form id="review-form">
+              <div class="form-row">
+                <label
+                  >Auditor<input
+                    id="reviewer"
+                    name="reviewer"
+                    maxlength="120"
+                    required
+                    autocomplete="name" /></label
+                ><label
+                  >Decisão<select id="decision" name="decision">
+                    <option value="in_review">Manter em revisão</option>
+                    <option value="rejected">Rejeitar hipótese</option>
+                    <option value="accepted">Aceitar após conferência</option>
+                  </select></label
+                >
+              </div>
+              <label
+                >Justificativa<textarea
+                  id="reason"
+                  name="reason"
+                  rows="3"
+                  maxlength="1000"
+                  required
+                  placeholder="Descreva a evidência conferida e os controles considerados."
+                ></textarea></label
+              ><label class="ack"
+                ><input id="ack" type="checkbox" />Conferi as evidências de
+                forma independente. Obrigatório para aceitar.</label
+              ><button id="save-review" class="primary" type="submit">
+                Registrar decisão
+              </button>
+            </form>
+          </section>
+        </section>
+        <section id="evidence-view" class="view" hidden>
+          <div class="section-heading">
+            <h2>Registro de evidências</h2>
+            <span id="evidence-count" class="count"></span>
+          </div>
+          <p class="subtle">
+            Origem e SHA-256 preservados. Conteúdo importado é entrada não
+            confiável.
+          </p>
+          <div id="all-evidence" class="evidence-list"></div>
+        </section>
+        <section id="history-view" class="view" hidden>
+          <h2>Histórico da avaliação</h2>
+          <p class="subtle">
+            Atividades dos agentes e decisões humanas persistidas no núcleo.
+          </p>
+          <ol id="events" class="events"></ol>
+        </section>
+        <footer>
+          TramontoSec AI<span
+            >Relatório preliminar enquanto houver etapas ou revisões
+            pendentes.</span
+          >
+        </footer>
+      </div>
+    </main>
+  </body>
+</html>
