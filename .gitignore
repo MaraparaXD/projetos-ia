@@ -1,0 +1,24 @@
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*secret*.json
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+# Auditorias locais
+*.sqlite3
+workspaces/
+private/
+output/
+artifacts/
+reports-private/
+*.log
