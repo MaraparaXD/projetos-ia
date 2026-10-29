@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tramontosec-ai"
+version = "0.3.0"
+description = "Auditoria local pelo Tramonto com três especialistas e revisão humana"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+pdf = ["pypdf>=6,<7"]
+
+[project.scripts]
+tramontosec = "tramontosec.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["tramontosec*"]
+
+[tool.setuptools.package-data]
+tramontosec = ["web/*.html", "web/*.css", "web/*.js"]

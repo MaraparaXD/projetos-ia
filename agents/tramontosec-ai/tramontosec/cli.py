@@ -3,13 +3,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
+import subprocess
 from pathlib import Path
 from .core import make_workspace, record_document, import_findings, list_findings, verify, review, export_report, no_sync_roots
 
 
 def cli() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog='tramontosec', description='Read-only audit evidence assistant')
-    parser.add_argument('--workspace', type=Path, required=True, help='Approved encrypted and non-synced folder')
+    parser = argparse.ArgumentParser(prog='tramontosec', description='TramontoSec AI v0.3 — auditoria passiva, especialistas e revisão humana')
+    from . import __version__
+    parser.add_argument('--version', action='version', version=__version__)
+    parser.add_argument('--workspace', type=Path, required=True, help='Pasta local autorizada, privada e fora de sincronização')
     subs = parser.add_subparsers(dest='command', required=True)
     ini = subs.add_parser('init', help='Initialize workspace')
     ini.add_argument('--ack-authorized-secure-storage', action='store_true', required=True,
@@ -67,6 +71,8 @@ def cli() -> argparse.ArgumentParser:
     ai.add_argument('--key', required=True)
     ai.add_argument('--model', required=True)
     ai.add_argument('--ack-local-model', action='store_true')
+    from .cli_v03 import add_commands
+    add_commands(subs)
     return parser
 
 
@@ -74,6 +80,9 @@ def main() -> None:
     args = cli().parse_args()
     workspace = args.workspace.expanduser()
     try:
+        from .cli_v03 import dispatch
+        if dispatch(args, workspace):
+            return
         if args.command == 'init':
             if not args.ack_authorized_secure_storage:
                 raise ValueError('Explicit confirmation of encrypted, private and authorized storage is required')
@@ -147,7 +156,11 @@ def main() -> None:
             print('LOCAL AI SUGGESTION ONLY — NOT AUDIT EVIDENCE OR HUMAN APPROVAL\n')
             print(local_suggestion(workspace, args.key, args.model, args.ack_local_model))
     except (ValueError, FileNotFoundError, KeyError, OSError) as error:
-        cli().exit(2, f'Error: {error}\n')
+        cli().exit(2, f'Erro: {error}\n')
+    except (sqlite3.Error, subprocess.SubprocessError):
+        cli().exit(2, 'Erro: falha ao acessar banco local ou Git. Confira o workspace e os requisitos.\n')
+    except KeyboardInterrupt:
+        cli().exit(130, 'Operação interrompida pelo auditor.\n')
 
 
 if __name__ == '__main__':

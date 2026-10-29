@@ -47,6 +47,8 @@ def local_suggestion(workspace: Path, key: str, model: str, ack: bool) -> str:
                                      headers={'Content-Type': 'application/json'}, method='POST')
     # Prevent outbound proxies and redirects to remote hosts.
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+    from .providers import require_downloaded_model
+    require_downloaded_model(opener, model)
     with opener.open(request, timeout=75) as response:
         if response.status != 200:
             raise ValueError('Local LLM endpoint returned error')
