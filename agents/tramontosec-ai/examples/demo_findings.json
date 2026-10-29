@@ -1,0 +1,11 @@
+[
+  {
+    "project": "SyntheticLab", "identifier": "DEMO-01",
+    "title": "Exemplo fictício: revisar proteção de rota",
+    "classification": "I", "severity": "Indeterminada",
+    "summary": "A evidência é sintética; não demonstra nenhuma vulnerabilidade real.",
+    "uncertainty": "Verificação manual obrigatória.",
+    "source_doc": "synthetic_fixture",
+    "evidence": [{"repo":"api", "path":"src/demo.py", "start":1, "end":1, "commit":"0000000000000000000000000000000000000000"}]
+  }
+]
