@@ -45,7 +45,7 @@ def add_commands(subs):
             p.add_argument('--reason', required=True)
             p.add_argument('--ack-human', action='store_true')
         elif name == 'evidence-import':
-            p.add_argument('--tool', choices=['recon', 'semgrep', 'trivy', 'gitleaks', 'zizmor'], required=True)
+            p.add_argument('--tool', choices=['recon', 'infra', 'semgrep', 'trivy', 'gitleaks', 'zizmor'], required=True)
             p.add_argument('--file', type=Path, required=True)
             p.add_argument('--commit')
             p.add_argument('--ack-redacted-input', action='store_true')
@@ -103,6 +103,8 @@ def dispatch(args, workspace: Path) -> bool:
     elif command == 'evidence-import':
         if args.tool == 'recon':
             key = evidence.import_recon(workspace, args.project, args.file, args.ack_redacted_input)
+        elif args.tool == 'infra':
+            key = evidence.import_infra(workspace, args.project, args.file, args.ack_redacted_input)
         else:
             key = evidence.import_scanner(workspace, args.project, args.tool, args.file, args.ack_redacted_input, args.commit)
         result = {'evidence_id': key, 'vulnerability_confirmed': False}
