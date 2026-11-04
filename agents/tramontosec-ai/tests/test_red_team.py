@@ -89,7 +89,7 @@ class RedTeamEvidenceTest(unittest.TestCase):
             self.assertEqual(len(output), 1)
             self.assertEqual(output[0]['mode'], 'local_llm_assisted')
             self.assertEqual(len(snapshot(ws, 'redlab')['hypotheses']), 7)
-            self.assertEqual(output[0]['evidence_ids'], [eid])
+            self.assertEqual(list(output[0]['evidence_ids']), [eid])
             self.assertIsNotNone(provider.metadata)
             surfaces = provider.metadata['evidence'][0]['surfaces']
             self.assertEqual({s['name'] for s in self.clean()['assets'][0]['services']},
