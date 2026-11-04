@@ -1,0 +1,18 @@
+{
+  "schema": "tramontosec.infra.v1",
+  "synthetic": true,
+  "assets": [
+    {
+      "asset": "lab.example.invalid",
+      "network": {"host_input": "accept", "edge_filter": "unknown"},
+      "auth": {"root_password_ssh": "yes"},
+      "availability": {"nodes": 1, "restore_tested": "unknown"},
+      "access": {"failed_logins": 150, "unknown_accepted": "unknown"},
+      "services": [
+        {"name": "dokploy", "port": 3000, "published": "yes", "ipv4": "yes", "ipv6": "yes", "reachable": "unknown", "socket": "rw", "privileged": "no"},
+        {"name": "minio", "port": 9000, "published": "yes", "ipv4": "yes", "ipv6": "yes", "reachable": "unknown"},
+        {"name": "buildkit", "published": "no", "privileged": "yes"}
+      ]
+    }
+  ]
+}
