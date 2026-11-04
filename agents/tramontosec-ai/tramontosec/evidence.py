@@ -154,3 +154,15 @@ def analyze_local(workspace: Path, project: str, relative: str) -> str:
     return save_evidence(workspace, project, 'scanner', hashlib.sha256(source).hexdigest(),
                          {'tool': 'python-ast', 'alerts': alerts, 'commit': state['head'],
                           'synthetic': info['synthetic'], 'review': 'human_required'})
+
+
+def import_infra(workspace: Path, project: str, path: Path, ack: bool) -> str:
+    """Importa metadados sanitizados e autorizados de infraestrutura, sem contato com alvos."""
+    from .red_team import normalize_infrastructure
+
+    info = get_project(workspace, project)
+    if not ack:
+        raise PermissionError('Confirme a sanitização e a coleta autorizada (--ack-redacted-input).')
+    digest, data = bounded_json(path)
+    clean = normalize_infrastructure(data, set(info['scope']['assets']), info['synthetic'])
+    return save_evidence(workspace, project, 'infra', digest, clean)
