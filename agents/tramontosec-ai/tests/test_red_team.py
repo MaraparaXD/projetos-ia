@@ -58,5 +58,45 @@ class RedTeamEvidenceTest(unittest.TestCase):
         self.assertEqual(analyze_infra(None, [{'id': 'e2', 'kind': 'infra', 'payload': clean}], [])['hypotheses'], [])
 
 
+    def test_runtime_import_and_local_provider_metadata(self):
+        import tempfile
+        from tramontosec.evidence import import_infra
+        from tramontosec.store import create_project, snapshot
+        from tramontosec.orchestrator import attest_stage, plan, run
+
+        class LocalSyntheticProvider:
+            def __init__(self):
+                self.metadata = None
+
+            def assess(self, message, metadata):
+                self.metadata = metadata
+                return {'summary': 'Revisar hipóteses sintéticas.', 'uncertainties': [],
+                        'evidence_ids': list(message.evidence_ids),
+                        'proposed_tools': ['analyze_infra']}
+
+        with tempfile.TemporaryDirectory() as root:
+            ws = Path(root) / 'workspace'
+            create_project(ws, 'redlab', 'Red Lab', 'Examinar dados fictícios.',
+                           ['lab.example.invalid'], synthetic=True, ack=True)
+            with self.assertRaises(PermissionError):
+                import_infra(ws, 'redlab', FIXTURE, False)
+            eid = import_infra(ws, 'redlab', FIXTURE, True)
+            for name in ('adequacao', 'verificacao', 'preparacao'):
+                attest_stage(ws, 'redlab', name, 'Auditor sintético', 'Etapa validada para teste.', True)
+            plan(ws, 'redlab', ['red'])
+            provider = LocalSyntheticProvider()
+            output = run(ws, 'redlab', provider)
+            self.assertEqual(len(output), 1)
+            self.assertEqual(output[0]['mode'], 'local_llm_assisted')
+            self.assertEqual(len(snapshot(ws, 'redlab')['hypotheses']), 7)
+            self.assertEqual(output[0]['evidence_ids'], [eid])
+            self.assertIsNotNone(provider.metadata)
+            surfaces = provider.metadata['evidence'][0]['surfaces']
+            self.assertEqual({s['name'] for s in self.clean()['assets'][0]['services']},
+                             set(surfaces[0]['services']))
+            self.assertNotIn('lab.example.invalid', json.dumps(provider.metadata))
+
+
+
 if __name__ == '__main__':
     unittest.main()
