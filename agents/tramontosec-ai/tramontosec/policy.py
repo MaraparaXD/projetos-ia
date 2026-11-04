@@ -19,6 +19,7 @@ class Tool(Protocol):
 
 TOOLS = MappingProxyType({
     'analyze_recon': ToolSpec('analyze_recon', (Profile.RED,)),
+    'analyze_infra': ToolSpec('analyze_infra', (Profile.RED,)),
     'analyze_static': ToolSpec('analyze_static', (Profile.STATIC,)),
     'review_controls': ToolSpec('review_controls', (Profile.BLUE,)),
 })

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 04/11/2026 (Red Team, incremento experimental)
+
+- Importação de metadados passivos de infraestrutura com esquema estrito e ativos previamente autorizados.
+- Hipóteses sobre firewall, SSH, interfaces administrativas, S3, BuildKit, continuidade e tentativas de login.
+- Evidência rastreável, incertezas explícitas e contraprovas; nenhum resultado é considerado exploração confirmada.
+- Red Team integrado à allowlist, CLI, SQLite e orquestração existentes; teste sintético de ponta a ponta.
+- Metadados de serviços normalizados antes de eventual avaliação por Ollama local; não envia nomes de ativos.
+- Não inclui scanning ativo, ações na VPS ou remediação automática.
+
 ## 0.3.0 — 29/10/2026
 
 - Três especialistas, mensagens estruturadas e runtime sequencial com memória.

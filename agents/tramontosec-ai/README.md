@@ -1,4 +1,4 @@
-# TramontoSec AI v0.3 Multi-Agent
+# TramontoSec AI v0.4 — Red Team (incremento experimental)
 
 Auditoria local assistida pelo Tramonto, com três especialistas sequenciais,
 políticas externas ao modelo, evidências persistentes e revisão humana.
@@ -43,7 +43,7 @@ escolha outro `--project`. A CLI funciona sem navegador.
 
 | Perfil | Ferramenta | Capacidade atual |
 |---|---|---|
-| red | analyze_recon | Hipóteses passivas de exposição HTTP, SSH e banco; contraprovas |
+| red | analyze_recon, analyze_infra | Hipóteses passivas de rede e infraestrutura, exposição e contraprovas |
 | static | analyze_static | Alertas por regra/arquivo/linha/commit; correlação conservadora |
 | blue | review_controls | Prioridade proposta, controles, mitigação, resposta a incidentes e validação; nada aplicado |
 
@@ -58,7 +58,7 @@ evidence-import baseline        analyze-local    finding-review
 task-cancel     report          models           demo       dashboard
 ```
 
-Use `--help` em cada comando. Antes de `run`, o auditor atesta `adequacao`,
+O novo importador `evidence-import --tool infra` aceita somente metadados\nestruturados e sanitizados; veja [RED_TEAM.md](RED_TEAM.md).\n\nUse `--help` em cada comando. Antes de `run`, o auditor atesta `adequacao`,
 `verificacao` e `preparacao`. Novas evidências invalidam Preparação e etapas
 posteriores. Planos antigos não aceitam alterações silenciosas: cancele com
 `task-cancel` e planeje novamente. [DEMO.md](DEMO.md) contém o fluxo completo.

@@ -17,3 +17,7 @@ validação real com modelo local pendente quando não houver modelo instalado.
 
 Execução ativa exige proposta separada com autorização verificável, escopo,
 limites, janela e isolamento técnico. Não está habilitada nem prometida na v0.4.
+
+## Incremento Red Team v0.4 (entregue como protótipo)
+
+Novo importador de metadados passivos sanitizados, sete categorias de hipóteses condicionais, documentação e testes sintéticos. Não é detecção validada cientificamente nem execução ativa. Manter as demais metas de v0.4 como pendentes até seus respectivos experimentos.

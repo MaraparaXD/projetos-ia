@@ -6,6 +6,7 @@ import json
 
 from .contracts import AgentResult, Profile, TaskMessage
 from .policy import authorize, check_message
+from .red_team import analyze_infra
 from .providers import Provider, ProviderError, validate_assessment
 
 
@@ -68,7 +69,7 @@ def review_controls(message: TaskMessage, evidence: list[dict], memory: list[dic
     return {'hypotheses': [], 'recommendations': recommendations}
 
 
-IMPLEMENTATIONS = {'analyze_recon': analyze_recon, 'analyze_static': analyze_static, 'review_controls': review_controls}
+IMPLEMENTATIONS = {'analyze_recon': analyze_recon, 'analyze_infra': analyze_infra, 'analyze_static': analyze_static, 'review_controls': review_controls}
 
 
 class Specialist:
@@ -89,7 +90,9 @@ class Specialist:
                     'evidence': [{'id': e['id'], 'kind': e['kind'],
                                   'alert_count': len(e['payload'].get('alerts', [])),
                                   'rules': [{'rule': a['rule_id'], 'severity': a['severity']} for a in e['payload'].get('alerts', [])[:20]],
-                                  'surfaces': [{'services': a['services'], 'declared_controls': a['controls']}
+                                  'surfaces': [{'services': [v if isinstance(v, str) else v.get('name', 'other')
+                                                               for v in a.get('services', [])[:30]],
+                                                'declared_controls': a.get('controls', [])}
                                                for a in e['payload'].get('assets', [])[:20]],
                                   'asset_count': len(e['payload'].get('assets', []))} for e in evidence[:100]],
                     'candidate_count': len(memory), 'allowed_tools': selected}

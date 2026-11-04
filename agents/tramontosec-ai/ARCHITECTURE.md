@@ -1,4 +1,4 @@
-# Arquitetura v0.3
+# Arquitetura v0.3 com incremento Red Team v0.4
 
 ```text
 CLI ──────────┐
