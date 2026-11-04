@@ -6,6 +6,7 @@ import json
 
 from .contracts import AgentResult, Profile, TaskMessage
 from .policy import authorize, check_message
+from .red_team import analyze_infra
 from .providers import Provider, ProviderError, validate_assessment
 
 
@@ -68,7 +69,7 @@ def review_controls(message: TaskMessage, evidence: list[dict], memory: list[dic
     return {'hypotheses': [], 'recommendations': recommendations}
 
 
-IMPLEMENTATIONS = {'analyze_recon': analyze_recon, 'analyze_static': analyze_static, 'review_controls': review_controls}
+IMPLEMENTATIONS = {'analyze_recon': analyze_recon, 'analyze_infra': analyze_infra, 'analyze_static': analyze_static, 'review_controls': review_controls}
 
 
 class Specialist:
