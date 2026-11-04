@@ -4,7 +4,7 @@ Somente TramontoSec neste diretório. Leia README, ARCHITECTURE, TRAMONTO,
 SECURITY e testes antes de alterar o núcleo. Preserve os módulos e os testes
 recuperados; mudanças incrementais. Interface em português brasileiro.
 
-- Red: reconhecimento passivo importado, hipóteses e contraprovas; analyze_recon.
+- Red: reconhecimento passivo e metadados de infraestrutura previamente coletados; analyze_recon e analyze_infra. Nenhum scan ativo.
 - Static: alertas sanitizados, rastreabilidade e correlação; analyze_static.
 - Blue: memória das hipóteses, controles, mitigação, resposta a incidentes e
   procedimento de validação; review_controls. Não aplica correções.
