@@ -1,4 +1,4 @@
-# TramontoSec AI v0.4 — Red Team (incremento experimental)
+# TramontoSec AI — agentes locais LLM experimentais (v0.5)
 
 Auditoria local assistida pelo Tramonto, com três especialistas sequenciais,
 políticas externas ao modelo, evidências persistentes e revisão humana.
@@ -42,16 +42,34 @@ python -m tramontosec --help
 python -m unittest discover -s tests -v
 ```
 
-## Papel da IA
+## Papel da IA — agentes experimentais
 
-**Sem modelo:** as três especializações usam regras determinísticas,
-documentadas e reproduzíveis. **Com Ollama local:** o modelo acrescenta
-um resumo consultivo e incertezas; propostas de ferramentas são validadas
-mas não substituem o conjunto executado pelas regras. O modelo não altera
-hipóteses, severidades, estado das etapas, revisões humanas ou remediações.
-A saída consultiva jamais confirma vulnerabilidade. Não há IA generativa
-na execução determinística. O caminho futuro de agentes propositivos
-exige contrato, testes e validação próprios.
+Sem Ollama, Red, Static e Blue continuam **determinísticos** e independentes
+do modelo. Com um modelo GGUF local explicitamente autorizado, o runtime
+pode solicitar até seis turnos JSON por especialista, utilizar ferramentas
+**exclusivamente consultivas** e receber propostas tipadas.
+
+- **Red Team:** cenários passivos sobre serviços efetivamente observados e
+  controles apenas declarados; hipóteses equivalentes às regras são fundidas
+  mantendo identificador estável e revisão humana.
+- **Static:** agrupa alertas de regras existentes para priorizar revisão de
+  possíveis falsos positivos; não executa nem lê código-fonte do alvo.
+- **Blue Team:** sugere mitigação, controle compensatório, validação e triagem
+  para hipóteses não rejeitadas, sem aplicar qualquer mudança.
+
+O loop autoriza `list_assets`, `get_alerts`, `read_evidence`,
+`list_hypotheses` e `get_hypothesis` **por perfil**. Recebe apenas
+metadados limitados com aliases; caminhos, código, nomes reais e segredos
+não são enviados ao modelo. JSON inválido, ferramenta proibida, ID
+inventado, limite de passos e indisponibilidade do modelo resultam em
+`deterministic_fallback`. Toda sugestão continua `candidate`, não
+confirmada. O relatório registra origem e trilha resumida de ferramentas,
+não a cadeia privada de raciocínio do modelo.
+
+**Status experimental:** FakeProvider comprova contratos e integração,
+não a qualidade de um Ollama real; ainda faltam avaliações empíricas,
+escolha do modelo, validação de limites e métricas científicas em
+cenários inéditos. Os resultados de benchmark sintético não medem detecção.
 
 ## Demonstração offline e dashboard
 
@@ -122,3 +140,16 @@ Documentos: [arquitetura](ARCHITECTURE.md), [agentes](AGENTS.md),
 [Tramonto](TRAMONTO.md), [segurança](SECURITY.md), [pesquisa](RESEARCH.md),
 [roadmap](ROADMAP.md), [changelog](CHANGELOG.md),
 [recuperação](docs/RECOVERY.md) e [validação](docs/VALIDATION.md).
+
+## Testes da branch experimental
+
+```bash
+git switch feat/agentes-ia
+cd agents/tramontosec-ai
+python -m unittest discover -s tests -v
+python -c "from tramontosec.benchmark import compare_agent_synthetic; print('Use FakeProvider dos testes para repetir a comparação offline.')"
+```
+
+A API do Ollama só fica ativa mediante `--model` e
+`--ack-local-model`. Sem um modelo GGUF local verificado, teste
+somente a execução determinística e o FakeProvider.

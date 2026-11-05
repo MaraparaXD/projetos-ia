@@ -109,6 +109,11 @@ def _run(workspace: Path, project: str, provider: Provider | None = None) -> lis
         try:
             output = Specialist(msg.profile).run(msg, current['evidence'], current['hypotheses'], provider).to_dict()
             with open_db(root) as db:
+                # Trilha breve de uso de ferramentas; não persistir prompts nem cadeia de pensamento.
+                for step in output.get('reasoning_trace', [])[:12]:
+                    event(db, 'llm_read_tool', {
+                        'task_id': msg.task_id, 'profile': msg.profile.value,
+                        'tool': step['tool'], 'reason': step['reason']})
                 for h in output['hypotheses']:
                     if not set(h['evidence']) <= set(msg.evidence_ids):
                         raise PermissionError('Hipótese cita evidência fora do escopo.')
@@ -214,9 +219,14 @@ def report_markdown(workspace: Path, project: str) -> str:
                               f'  - Evidências citadas pelo modelo: {safe(", ".join(a["evidence_ids"]))}.']
             for h in data['hypotheses']:
                 lines += ['', f'### {safe(h["title"])}', f'- ID: `{h["id"]}`; severidade proposta: {h["severity"]}; decisão: {h["status"]}.',
-                          f'- Evidências: {", ".join(h["evidence"])}.', f'- Incerteza: {safe(h["uncertainty"])}.',
+                          f'- Evidências: {", ".join(h["evidence"])}.', f'- Origem: {safe(h.get("origin", "rule"))}.',
+                          f'- Incerteza: {safe(h["uncertainty"])}.',
                           f'- Auditor: {safe(h["reviewer"] or "pendente")}; justificativa: {safe(h["reason"] or "pendente")}.']
                 lines += [f'- Contraprova: {safe(c)}' for c in h['controls']]
+                if h.get('origin') == 'llm':
+                    lines.append('- Sugestão de modelo não verificada; decisão exclusivamente humana.')
+                for trace_step in h.get('reasoning_trace', [])[:6]:
+                    lines.append(f'- Trilha resumida: ferramenta {safe(trace_step["tool"])}; {safe(trace_step["reason"])}')
             for rec in data['recommendations']:
                 r = rec['payload']
                 lines += ['', f'- Recomendação para `{r["hypothesis_id"]}`: {safe(r["mitigation"])}',

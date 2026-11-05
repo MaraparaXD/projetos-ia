@@ -48,3 +48,39 @@ def run_benchmark() -> dict:
                 'precision': tp/(tp+fp) if tp+fp else None,
                 'recall':tp/(tp+fn) if tp+fn else None,
                 'warning':'NOT measurement of vulnerability discovery or LLM security accuracy'}
+
+
+def compare_agent_synthetic(provider) -> dict:
+    """Experimento unitário sintético: não mede precisão real de vulnerabilidades."""
+    from time import perf_counter
+    from .agents import Specialist
+    from .contracts import Profile, TaskMessage
+    from .policy import allowed_tools
+
+    msg = TaskMessage('synthetic-benchmark', 'benchmark', Profile.RED,
+                      'Avaliar evidências fictícias', 'execucao',
+                      ('synthetic-e1',), allowed_tools(Profile.RED))
+    evidence = [{'id': 'synthetic-e1', 'kind': 'recon', 'payload': {'assets': [
+        {'asset': 'lab.example.invalid', 'services': ['http', 'ssh'],
+         'controls': ['tls']}
+    ]}}]
+    start = perf_counter()
+    baseline = Specialist(Profile.RED).run(msg, evidence, [])
+    baseline_time = perf_counter() - start
+    start = perf_counter()
+    agent = Specialist(Profile.RED).run(msg, evidence, [], provider)
+    agent_time = perf_counter() - start
+
+    def describe(out, elapsed):
+        refs = {e for h in out.hypotheses for e in h['evidence']}
+        return {'mode': out.mode, 'hypotheses': len(out.hypotheses),
+                'coverage_evidence': len(refs) / len(evidence),
+                'invalid_response_rate': 1.0 if out.mode == 'deterministic_fallback' else 0.0,
+                'elapsed_seconds': round(elapsed, 6)}
+
+    return {'synthetic_only': True, 'vulnerability_detection_validated': False,
+            'samples': 1, 'baseline': describe(baseline, baseline_time),
+            'agent': describe(agent, agent_time),
+            'limitations': ('Uma fixture, sem ground truth de vulnerabilidades. '
+                            'Tempo depende de hardware e provedor. '
+                            'Sem precisão ou recall de detecção.')}

@@ -56,3 +56,18 @@ próprio código público rodaram somente no checkout desta entrega.
 Não houve experimento científico comparativo. A CI configurada usa Windows e
 Linux com Python 3.11/3.13; resultados de CI devem ser consultados na execução
 do commit publicado, sem presumir sucesso antes de sua execução.
+
+## Comparação experimental v0.5: baseline vs agentes LLM
+
+O módulo `benchmark.py` possui `compare_agent_synthetic(provider)`, que usa
+**uma fixture fictícia** em memória e um provedor injetável. Os testes empregam
+`FakeProvider`, sem Ollama e sem acesso à rede. São relatados os totais de
+hipóteses, a proporção de IDs de evidência referenciados, a taxa de fallback
+por resposta inválida e o tempo de execução com `perf_counter`. O valor
+`vulnerability_detection_validated: false` é obrigatório.
+
+Esse experimento verifica comportamento de software, **não precisão, recall ou
+eficácia real de detecção**. O próximo desenho científico precisa de cenários
+inéditos, ground truth independente, revisão cega, comparabilidade de modelo,
+hardware, orçamento de inferência, distribuição de tempos e intervalos de
+confiança. Logs, segredos e ativos reais não devem entrar na fixture.

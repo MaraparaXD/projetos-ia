@@ -38,3 +38,28 @@ de parser de SO. Não há garantia absoluta contra prompt injection.
 Revisão desta entrega: [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).
 Comunicar problemas ao mantenedor em canal privado previamente acordado;
 não há endereço de divulgação de vulnerabilidades configurado.
+
+## Ameaças específicas do loop LLM experimental
+
+Entradas com prompt injection podem chegar por campos de evidência sanitizada.
+O motor trata esses campos como **dados**, não como instruções; somente
+serviços enumerados, aliases de ativos, IDs, regras e severidades limitadas
+podem compor os resultados das ferramentas consultivas. Não encaminhar
+nomes reais, código-fonte, credenciais, caminhos ou logs.
+
+O modelo responde JSON não confiável. `agent_loop.py` limita passos e tamanho,
+valida `action`, nome de ferramenta e argumentos; `policy.py` restringe
+cada perfil. `agent_validation.py` valida referências existentes, schema
+estrito, quantidade de propostas e severidade. Não confundir saída
+`local_llm_agent` com decisão humana ou prova de exploração.
+
+Falhas, injeções, IDs fabricados, ferramenta fora da allowlist, contexto
+excessivo ou resposta inválida devem resultar em fallback determinístico
+registrado; nunca em elevação de privilégio. O gateway Ollama é somente
+loopback com GGUF local verificado, proxy desativado e redirects proibidos.
+As decisões humanas, CSRF, CSP e controles de Host/Origin permanecem fora
+do domínio de confiança do modelo.
+
+Uma implementação real em máquina com Ollama exige revisão separada de
+modelo, limites de tokens e política de metadados permitidos; ainda não
+há avaliação científica em ambiente real nem direito de acesso a alvos.

@@ -21,3 +21,12 @@ limites, janela e isolamento técnico. Não está habilitada nem prometida na v0
 ## Incremento Red Team v0.4 (entregue como protótipo)
 
 Novo importador de metadados passivos sanitizados, sete categorias de hipóteses condicionais, documentação e testes sintéticos. Não é detecção validada cientificamente nem execução ativa. Manter as demais metas de v0.4 como pendentes até seus respectivos experimentos.
+
+## Pendências antes de afirmar maturidade de agentes LLM
+
+- Selecionar modelo GGUF local, medir latência e resistência adversarial com
+  escopos fictícios inéditos.
+- Fixar limites de passos e tokens após avaliação de desempenho.
+- Revisar exatamente quais metadados podem ser enviados ao Ollama local.
+- Obter julgamentos humanos cegos e ground truth para medir eficácia.
+- Confirmar licença e canal de divulgação responsável com o mantenedor.

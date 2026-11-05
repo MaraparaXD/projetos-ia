@@ -70,3 +70,27 @@ Os arquivos SQLite v0.2 e v0.3 não são automaticamente migrados entre
 escopos: a CLI legada consulta o workspace histórico e os projetos novos
 utilizam `<workspace>/projects/<id>/`. Ambos podem coexistir no mesmo
 workspace, mas evidências, gates e decisões de cada camada não se misturam.
+
+## Especialização LLM experimental (branch feat/agentes-ia)
+
+O `agent_loop.py` controla no máximo seis iterações com respostas JSON
+`action=tool|final`. `policy.READ_TOOLS` limita consultas por perfil.
+Os dados vêm de evidências importadas e memória em SQLite, exclusivamente
+via representação sanitizada sem nomes de ativos, IPs, caminhos e código.
+`agent_validation.py` rederiva IDs estáveis e valida referências, escopo,
+severidade, tamanho, estados e lista de campos; nenhuma string do modelo
+vira comando, autorização, decisão ou correção.
+
+`OllamaProvider.agent_step` utiliza apenas o serviço
+`127.0.0.1:11434`, sem proxy ou redirect, e verifica metadados GGUF locais
+antes de cada consulta. O runtime executa a ordem Red → Static → Blue; cada
+modelo pode falhar de forma recuperável, mantendo o baseline de regras e
+registrando `deterministic_fallback`. Problemas de infraestrutura internos
+continuam gerando falha de tarefa, sem ocultá-la.
+
+Os `runtime_events` guardam o nome da ferramenta consultiva e um motivo
+predefinido, sem prompt bruto nem cadeia de raciocínio. As saídas versionadas
+guardam `reasoning_trace` curto e `origin=rule|llm`; snapshots e relatório
+derivam a origem desses resultados, sem alteração destrutiva do esquema
+legado. Hipóteses seguem `candidate`; somente o auditor pode aprovar.
+A análise do benchmark sintético **não** atesta qualidade de detecção.

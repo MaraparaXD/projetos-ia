@@ -151,7 +151,14 @@ function selectFinding(h, scroll = false) {
       .filter((e) => h.evidence.includes(e.id))
       .map(evidenceBlock),
   );
-  $("uncertainty").textContent = h.uncertainty;
+  const trace = (h.reasoning_trace || []).slice(0, 6)
+    .map((step) => step.tool + ": " + step.reason)
+    .join("; ");
+  $("uncertainty").textContent =
+    "Origem: " + (h.origin === "llm" ? "LLM" : "regra") + ". " +
+    h.uncertainty +
+    (h.origin === "llm" ? " Sugestão de modelo não verificada." : "") +
+    (trace ? " Trilha resumida: " + trace : "");
   $("controls").replaceChildren(...h.controls.map((c) => node("li", c)));
   $("blue-advice").replaceChildren();
   const advice = current.recommendations
@@ -274,7 +281,7 @@ function render(data) {
     $("specialists").append(li);
   });
   const modes = data.tasks.map((t) => t.output?.mode).filter(Boolean),
-    assisted = modes.includes("local_llm_assisted"),
+    assisted = modes.includes("local_llm_assisted") || modes.includes("local_llm_agent"),
     fallback = modes.includes("deterministic_fallback");
   $("processing-mode").textContent = assisted
     ? "Assistência de modelo local"
@@ -314,6 +321,7 @@ function render(data) {
         deterministic: "Análise determinística",
         deterministic_fallback: "Fallback determinístico",
         local_llm_assisted: "Assistência de modelo local",
+        local_llm_agent: "Agente com modelo local",
       }[d.mode] || "",
     ]
       .filter(Boolean)
