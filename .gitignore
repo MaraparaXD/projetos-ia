@@ -50,3 +50,6 @@ Thumbs.db
 models/
 *.gguf
 *.safetensors
+
+# Artefatos locais da ferramenta de design (não necessários para runtime)
+**/.impeccable/

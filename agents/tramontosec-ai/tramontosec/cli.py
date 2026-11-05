@@ -1,4 +1,7 @@
-"""Command-line interface for TramontoSec AI."""
+"""CLI principal: subcomandos legados v0.2 coexistem com comandos v0.3.
+
+Não remova nem renomeie os comandos de recuperação histórica.
+"""
 from __future__ import annotations
 
 import argparse
@@ -6,7 +9,7 @@ import json
 import sqlite3
 import subprocess
 from pathlib import Path
-from .core import make_workspace, record_document, import_findings, list_findings, verify, review, export_report, no_sync_roots
+from .core import make_workspace, record_document, import_findings, list_findings, verify, review, export_report
 
 
 def cli() -> argparse.ArgumentParser:

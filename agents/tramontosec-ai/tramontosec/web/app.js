@@ -390,6 +390,11 @@ $("export").addEventListener("click", async () => {
   if (!current) return;
   const project = current.project.id;
   try {
+    await api("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
+      body: JSON.stringify({ project }),
+    });
     const response = await api(
       "/api/report?project=" + encodeURIComponent(project),
     );

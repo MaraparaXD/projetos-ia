@@ -9,8 +9,15 @@ from .core import open_db, require_workspace
 
 
 def _same_file(source: str, target: str) -> bool:
-    a=source.replace('\\','/').lstrip('./')
-    b=target.replace('\\','/').lstrip('./')
+    # Remova apenas prefixos de diretório relativos; arquivos ocultos não são prefixos.
+    def relative_prefix(value: str) -> str:
+        value = value.replace('\\', '/')
+        while value.startswith('./'):
+            value = value[2:]
+        return value
+
+    a = relative_prefix(source)
+    b = relative_prefix(target)
     if a.startswith('[') or b.startswith('[') or not a or not b:
         return False
     # Anchored suffix with path separator; prevents foo.ts ~ notfoo.ts.

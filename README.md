@@ -8,7 +8,7 @@ Cada agente tem sua pasta em `agents/`, com código, testes, documentação e de
 
 | Agente | Finalidade | Estado |
 |---|---|---|
-| [TramontoSec AI](agents/tramontosec-ai/README.md) | Auditoria passiva pelo Tramonto: Red Team, análise estática e Blue Team | v0.3.0: runtime sequencial, CLI, dashboard local e LLM opcional |
+| [TramontoSec AI](agents/tramontosec-ai/README.md) | Auditoria passiva pelo Tramonto: Red Team, análise estática e Blue Team | v0.4 experimental: Red passivo, runtime sequencial e dashboard local |
 
 O catálogo aceita agentes de qualquer domínio. Projetos futuros não precisam ser ferramentas de segurança.
 

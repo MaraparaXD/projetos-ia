@@ -11,6 +11,7 @@ dependencies = []
 
 [project.optional-dependencies]
 pdf = ["pypdf>=6,<7"]
+dev = ["ruff>=0.14,<0.16", "coverage>=7.10,<8"]
 
 [project.scripts]
 tramontosec = "tramontosec.cli:main"
@@ -20,3 +21,10 @@ include = ["tramontosec*"]
 
 [tool.setuptools.package-data]
 tramontosec = ["web/*.html", "web/*.css", "web/*.js"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E4", "E9", "F"]

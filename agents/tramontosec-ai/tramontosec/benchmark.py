@@ -3,7 +3,6 @@
 No project data, no LLM, no network and no scanner execution.
 """
 from __future__ import annotations
-import json
 import tempfile
 import subprocess
 import os

@@ -1,4 +1,6 @@
-"""TramontoSec AI v0.2: audit evidence registry and human review gate.
+"""TramontoSec AI legado v0.2: registro de evidências e revisão humana.
+
+Compatibilidade intencional: o runtime v0.3 está em store.py e orchestrator.py.
 
 Only Python stdlib; never executes target code, shell commands, or scanners.
 """

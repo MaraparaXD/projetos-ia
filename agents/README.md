@@ -4,4 +4,4 @@ Os projetos de IA ficam em subpastas independentes. Cada agente deve ter documen
 
 ## TramontoSec AI
 
-Agente assistivo de auditoria baseado no Tramonto. O código recuperado será publicado em `agents/tramontosec-ai/` após validação e sanitização.
+Agente assistivo de auditoria baseado no Tramonto. O código está publicado em `agents/tramontosec-ai/`; os limites de segurança e as validações em andamento estão documentados nessa pasta.

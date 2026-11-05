@@ -3,7 +3,6 @@ from dataclasses import FrozenInstanceError, replace
 import json
 import os
 from pathlib import Path
-import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -12,7 +11,6 @@ from unittest.mock import patch
 
 from tramontosec.agents import Specialist
 from tramontosec.contracts import Profile, TaskMessage
-from tramontosec.core import open_db
 from tramontosec.demo import run_demo
 from tramontosec.evidence import analyze_local, baseline, import_recon, import_scanner
 from tramontosec.locking import execution_lock
@@ -283,7 +281,7 @@ class MultiAgentTest(unittest.TestCase):
         self.assertEqual(snapshot(self.ws, 'lab')['tasks'][0]['status'], 'cancelled')
 
     def test_local_ast_never_executes_and_rejects_traversal(self):
-        result = run_demo(self.ws, 'ast-demo')
+        run_demo(self.ws, 'ast-demo')
         for path in ('../outside.py', '/tmp/outside.py', 'C:\\Windows\\outside.py'):
             with self.assertRaises(ValueError):
                 analyze_local(self.ws, 'ast-demo', path)
