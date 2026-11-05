@@ -67,6 +67,7 @@ class AgentResult:
     evidence_ids: tuple[str, ...]
     model_assessment: dict | None = None
     schema: str = 'tramontosec.result.v1'
+    reasoning_trace: tuple[dict, ...] = ()
 
     def to_dict(self) -> dict:
         return asdict(self)
