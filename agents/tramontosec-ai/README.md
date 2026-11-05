@@ -26,6 +26,33 @@ Também é possível executar diretamente `python -m tramontosec` na pasta do
 agente sem instalação. O layout `tramontosec/` preserva compatibilidade com o
 ZIP; não foi necessária migração para `src/`.
 
+
+## Instalação no Linux e macOS
+
+Requisitos: Python 3.11+ e Git. Em distribuições Linux, instale o pacote
+`python3-venv` quando necessário.
+
+```bash
+git clone https://github.com/MaraparaXD/projetos-ia.git
+cd projetos-ia/agents/tramontosec-ai
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
+python -m tramontosec --help
+python -m unittest discover -s tests -v
+```
+
+## Papel da IA
+
+**Sem modelo:** as três especializações usam regras determinísticas,
+documentadas e reproduzíveis. **Com Ollama local:** o modelo acrescenta
+um resumo consultivo e incertezas; propostas de ferramentas são validadas
+mas não substituem o conjunto executado pelas regras. O modelo não altera
+hipóteses, severidades, estado das etapas, revisões humanas ou remediações.
+A saída consultiva jamais confirma vulnerabilidade. Não há IA generativa
+na execução determinística. O caminho futuro de agentes propositivos
+exige contrato, testes e validação próprios.
+
 ## Demonstração offline e dashboard
 
 ```powershell
@@ -58,7 +85,10 @@ evidence-import baseline        analyze-local    finding-review
 task-cancel     report          models           demo       dashboard
 ```
 
-O novo importador `evidence-import --tool infra` aceita somente metadados\nestruturados e sanitizados; veja [RED_TEAM.md](RED_TEAM.md).\n\nUse `--help` em cada comando. Antes de `run`, o auditor atesta `adequacao`,
+O novo importador `evidence-import --tool infra` aceita somente metadados
+estruturados e sanitizados; veja [RED_TEAM.md](RED_TEAM.md).
+
+Use `--help` em cada comando. Antes de `run`, o auditor atesta `adequacao`,
 `verificacao` e `preparacao`. Novas evidências invalidam Preparação e etapas
 posteriores. Planos antigos não aceitam alterações silenciosas: cancele com
 `task-cancel` e planeje novamente. [DEMO.md](DEMO.md) contém o fluxo completo.

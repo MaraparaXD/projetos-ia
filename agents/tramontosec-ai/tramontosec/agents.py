@@ -146,8 +146,7 @@ class Specialist:
             try:
                 assessment = validate_assessment(provider.assess(message, meta), message)
                 mode = 'local_llm_assisted'
-                # Controlled tool selection: model may select only allowlisted metadata tools.
-                selected = assessment['proposed_tools'] or selected
+                # Parecer consultivo: o modelo não determina o conjunto de regras executadas.
             except (ProviderError, OSError, TimeoutError):
                 uncertainties.append('Provedor falhou ou retornou dados inválidos. Sem inferência utilizável; fallback determinístico.')
                 mode = 'deterministic_fallback'
