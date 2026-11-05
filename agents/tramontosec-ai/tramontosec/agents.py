@@ -5,6 +5,8 @@ import hashlib
 import json
 
 from .contracts import AgentResult, Profile, TaskMessage
+from .agent_loop import AgentLoopError, run_agent_loop
+from .agent_validation import InvalidProposal, validate_model_proposals
 from .policy import authorize, check_message
 from .red_team import analyze_infra
 from .providers import Provider, ProviderError, validate_assessment
@@ -129,9 +131,21 @@ class Specialist:
         if message.profile != self.profile or {e['id'] for e in evidence} != set(message.evidence_ids):
             raise PermissionError('Evidências ou perfil não correspondem ao contrato.')
         assessment, uncertainties = None, ['Concordância entre especialistas não constitui evidência independente.']
+        model_hypotheses, model_recommendations, trace = [], [], ()
         mode = 'deterministic'
         selected = list(message.allowed_tools)
-        if provider:
+        if provider and self.profile == Profile.RED and callable(getattr(provider, 'agent_step', None)):
+            try:
+                raw = run_agent_loop(provider, message, evidence, memory)
+                parsed = validate_model_proposals(message, evidence, memory, raw)
+                model_hypotheses, model_recommendations = parsed['hypotheses'], parsed['recommendations']
+                trace = tuple(raw['reasoning_trace'])
+                mode = 'local_llm_agent'
+            except (AgentLoopError, InvalidProposal, PermissionError, ProviderError,
+                    OSError, TimeoutError, TypeError, KeyError, RecursionError, StopIteration):
+                uncertainties.append('Proposta Red inválida ou bloqueada; regras determinísticas preservadas.')
+                mode = 'deterministic_fallback'
+        elif provider:
             # Omit objective text, asset identifiers, file paths and source. Only counts/IDs go to Ollama.
             meta = {'profile': self.profile.value, 'stage': message.stage,
                     'evidence': [{'id': e['id'], 'kind': e['kind'],
@@ -158,5 +172,18 @@ class Specialist:
             output = IMPLEMENTATIONS[name](message, evidence, memory)
             findings.extend(output['hypotheses'])
             recommendations.extend(output['recommendations'])
+        # Identidades de regra são estáveis; correspondências LLM não sobrescrevem seu ID.
+        known = {h['id']: h for h in findings}
+        for candidate in findings:
+            candidate.setdefault('origin', 'rule')
+        for candidate in model_hypotheses:
+            existing = known.get(candidate['id'])
+            if existing:
+                existing['uncertainty'] += ' O modelo propôs hipótese equivalente; sugestão não verificada.'
+            else:
+                findings.append(candidate)
+                known[candidate['id']] = candidate
+        recommendations.extend(model_recommendations)
         return AgentResult(message.task_id, self.profile, mode, tuple(findings), tuple(recommendations),
-                           tuple(uncertainties), message.evidence_ids, assessment)
+                           tuple(uncertainties), message.evidence_ids, assessment,
+                           reasoning_trace=trace)
