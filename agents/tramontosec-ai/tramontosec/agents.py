@@ -74,14 +74,42 @@ def analyze_static(message: TaskMessage, evidence: list[dict], memory: list[dict
 
 
 def review_controls(message: TaskMessage, evidence: list[dict], memory: list[dict]) -> dict:
+    """Recomendações específicas sem aplicar mudanças nem validar incidentes."""
     recommendations = []
     for candidate in memory:
+        if candidate.get('status') == 'rejected':
+            continue
+        title = candidate.get('title', '').lower()
+        profiles = candidate.get('profiles', [])
+        if 'static' in profiles or title.startswith('revisar '):
+            mitigation = 'Revisar a regra e o contexto do alerta; corrigir a causa apenas após confirmar o caminho afetado.'
+            validation = 'Conferir regra, versão, localização e executar novamente a análise estática no baseline aprovado.'
+            incident = 'Se o alerta indicar incidente confirmado, preservar versão e registros; acionar resposta com o time de aplicação.'
+            if 'secret' in title or 'password' in title:
+                mitigation = 'Avaliar exposição real da credencial; planejar rotação autorizada sem divulgar seu valor.'
+                validation = 'Confirmar escopo e revisar histórico sanitizado e controles de gestão de segredos.'
+        elif 'ssh' in title or 'autenticação' in title:
+            mitigation = 'Conferir acesso administrativo, origens autorizadas e autenticação, com plano de continuidade aprovado.'
+            validation = 'Validar a configuração e o caminho de recuperação sem interromper sessões legítimas.'
+            incident = 'Correlacionar logins aceitos com responsáveis e preservar registros antes de qualquer contenção.'
+        elif 'database' in title or 'banco' in title:
+            mitigation = 'Revisar ACL de banco, papéis e origem dos clientes autorizados antes de restringir acesso.'
+            validation = 'Conferir alcance e autenticação com verificações previamente autorizadas e não destrutivas.'
+            incident = 'Se houver acesso indevido comprovado, preservar trilhas do banco e escalar a resposta.'
+        elif 'minio' in title or 's3' in title:
+            mitigation = 'Revisar política de buckets, TLS e consumidores de objetos antes de limitar a API.'
+            validation = 'Confirmar clientes internos/externos e URLs pré-assinadas sem ler dados sensíveis.'
+            incident = 'Caso haja evidência de acesso não autorizado, preservar logs de objeto e notificar responsáveis.'
+        else:
+            mitigation = 'Revisar exposição do serviço e aplicar menor privilégio somente após validação e aprovação humana.'
+            validation = 'Verificar alcance real, dependências e controles compensatórios após mudança autorizada.'
+            incident = 'Caso surjam evidências independentes de intrusão, preservar logs e acionar triagem humana.'
         recommendations.append({
             'hypothesis_id': candidate['id'], 'priority': candidate['severity'],
             'controls_to_verify': candidate['controls'],
-            'mitigation': 'Revisar exposição e aplicar menor privilégio após validação e aprovação humana.',
-            'validation': 'Auditor deve conferir contraprovas, revisar a correção e repetir a análise autorizada.',
-            'incident_response': 'Se houver evidência independente de incidente, acionar o procedimento humano de triagem, preservação e contenção.',
+            'mitigation': mitigation,
+            'validation': validation,
+            'incident_response': incident,
             'applied': False, 'evidence': candidate['evidence'],
             'independent_confirmation': False,
         })
