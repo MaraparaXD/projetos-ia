@@ -1,0 +1,49 @@
+name: Independent AI agents (GraphIntel and Design)
+
+on:
+  push:
+    paths:
+      - 'agents/graphintel-agent/**'
+      - 'agents/design-agent/**'
+      - '.github/workflows/independent-agents-tests.yml'
+  pull_request:
+    paths:
+      - 'agents/graphintel-agent/**'
+      - 'agents/design-agent/**'
+      - '.github/workflows/independent-agents-tests.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: independent-agents-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline:
+    name: ${{ matrix.agent }} | Python ${{ matrix.python }} | ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        agent: [graphintel-agent, design-agent]
+        python: ['3.11', '3.13']
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: agents/${{ matrix.agent }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Testes offline
+        run: python -m unittest discover -s tests -v
+      - name: GraphIntel smoke
+        if: matrix.agent == 'graphintel-agent'
+        run: python -m graphintel --graph examples/graph.synthetic.json --focus storage
+      - name: Design smoke
+        if: matrix.agent == 'design-agent'
+        run: python -m designagent --input examples/screen.synthetic.json

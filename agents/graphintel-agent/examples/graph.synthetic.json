@@ -1,0 +1,39 @@
+{
+  "graph": {
+    "schema_version": "1"
+  },
+  "nodes": [
+    {
+      "id": "frontend",
+      "label": "Frontend",
+      "file_type": "code",
+      "source_file": "app/frontend.py"
+    },
+    {
+      "id": "api",
+      "label": "API",
+      "file_type": "code",
+      "source_file": "app/api.py"
+    },
+    {
+      "id": "storage",
+      "label": "Storage",
+      "file_type": "code",
+      "source_file": "app/storage.py"
+    }
+  ],
+  "links": [
+    {
+      "source": "frontend",
+      "target": "api",
+      "relation": "calls",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "api",
+      "target": "storage",
+      "relation": "imports",
+      "confidence": "INFERRED"
+    }
+  ]
+}
