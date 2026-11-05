@@ -1,4 +1,7 @@
-"""Command-line interface for TramontoSec AI."""
+"""CLI principal: subcomandos legados v0.2 coexistem com comandos v0.3.
+
+Não remova nem renomeie os comandos de recuperação histórica.
+"""
 from __future__ import annotations
 
 import argparse

@@ -41,3 +41,32 @@ consultar snapshot, exportar Markdown e revisar hipóteses. Token efêmero,
 cookie HttpOnly/SameSite, CSRF, Host/Origin e CSP protegem o acesso local.
 O [http.server](https://docs.python.org/3.13/library/http.server.html) não é
 servidor de produção completo; não publicar o dashboard na rede.
+
+
+## Compatibilidade explícita: legado v0.2 e runtime v0.3
+
+O módulo `cli.py` mantém a entrada única. Os seguintes comandos pertencem
+à camada legada v0.2 e permanecem operacionais: `init`, `attach`, `seed`,
+`list`, `upgrade`, `catalog-report`, `git-check`, `import-scan`,
+`alerts`, `triage`, `ai-inventory`, `benchmark`, `correlate`,
+`verify`, `review`, `export` e `assist-local`.
+
+Suas tabelas originais, implementadas em `core.py`, são:
+`documents`, `findings`, `report_catalog`, `scanner_runs`, `alerts`
+e `events`. O `PRAGMA user_version = 2` é mantido. Não converter
+automaticamente esses registros em hipóteses aceitas do runtime novo.
+
+Os comandos adicionados em v0.3 por `cli_v03.py` são:
+`project-create`, `projects`, `agents`, `models`, `audit`,
+`history`, `report`, `plan`, `run`, `stage`, `evidence-import`,
+`baseline`, `analyze-local`, `finding-review`, `task-cancel`,
+`demo` e `dashboard`. A camada em `store.py` mantém
+`runtime_meta`, `project`, `stages`, `evidence`, `tasks`,
+`hypotheses`, `recommendations` e `runtime_events` no banco
+**separado de cada projeto**. O runtime evoluiu incrementalmente para v0.4
+com o importador `infra` e sem remover a camada v0.2.
+
+Os arquivos SQLite v0.2 e v0.3 não são automaticamente migrados entre
+escopos: a CLI legada consulta o workspace histórico e os projetos novos
+utilizam `<workspace>/projects/<id>/`. Ambos podem coexistir no mesmo
+workspace, mas evidências, gates e decisões de cada camada não se misturam.
