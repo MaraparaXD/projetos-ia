@@ -10,7 +10,7 @@ recuperados; mudanças incrementais. Interface em português brasileiro.
   procedimento de validação; review_controls. Não aplica correções.
 
 TaskMessage/AgentResult são contratos versionados. Ordem Red → Static → Blue,
-sequencial. Regras determinísticas não são inferência. Modelo só sugere.
+sequencial. Sem modelo as regras são determinísticas. Com Ollama GGUF local, o loop limitado pode propor hipóteses e recomendações validadas, sempre candidatas; jamais decide.
 Não conceder a agentes/modelos acesso a decisão humana, escopo ou política.
 
 Não acessar, varrer ou modificar infraestrutura de terceiros. Não executar

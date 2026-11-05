@@ -29,3 +29,9 @@
 - Verificação de baseline Git e referências de arquivo/linha.
 - Importação de metadados sanitizados de Semgrep, Trivy, Gitleaks e Zizmor.
 - Catálogo de relatórios, correlação heurística, revisão humana e LLM local opcional.
+
+## Agentes LLM experimentais — branch feat/agentes-ia (não lançada)
+- Loop consultivo por especialista e allowlist de ferramentas de metadados.
+- Propostas tipadas e validadas, origem rule/llm, fallback determinístico.
+- Red/Static/Blue com FakeProvider, trilha resumida e benchmark sintético.
+- Não há testes ativos, confirmação automática, cloud nem remediação.
