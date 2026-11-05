@@ -17,6 +17,7 @@ class BlueLLMTest(unittest.TestCase):
     def setUp(self):
         self.msg = TaskMessage('t', 'lab', Profile.BLUE, 'Revisar controles fictícios',
                                'execucao', ('e1',), allowed_tools(Profile.BLUE))
+        self.evidence = [{'id': 'e1', 'kind': 'recon', 'payload': {'assets': []}}]
         self.memory = [
             {'id': 'h1', 'status': 'candidate', 'title': 'Investigar superfície ssh',
              'severity': 'Alta', 'controls': ['Verificar ACL'], 'evidence': ['e1']},
@@ -37,7 +38,7 @@ class BlueLLMTest(unittest.TestCase):
                  'incident_response': 'Nenhuma.'},
             ]},
         ]
-        result = Specialist(Profile.BLUE).run(self.msg, [], self.memory, FakeProvider(steps))
+        result = Specialist(Profile.BLUE).run(self.msg, self.evidence, self.memory, FakeProvider(steps))
         self.assertEqual(result.mode, 'local_llm_agent')
         self.assertEqual(len(result.recommendations), 1)
         rec = result.recommendations[0]
@@ -50,7 +51,7 @@ class BlueLLMTest(unittest.TestCase):
         fake = FakeProvider([{'action': 'final', 'hypotheses': [], 'recommendations': [
             {'hypothesis_id': 'absent', 'mitigation': 'x', 'compensating_control': 'y',
              'validation': 'z', 'incident_response': 'w'}]}])
-        result = Specialist(Profile.BLUE).run(self.msg, [], self.memory, fake)
+        result = Specialist(Profile.BLUE).run(self.msg, self.evidence, self.memory, fake)
         self.assertEqual(result.mode, 'deterministic_fallback')
         self.assertEqual(len(result.recommendations), 1)
 
