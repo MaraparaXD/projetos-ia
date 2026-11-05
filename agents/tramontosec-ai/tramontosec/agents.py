@@ -18,20 +18,39 @@ def hypothesis(kind: str, identity: list, title: str, severity: str,
 
 
 def analyze_recon(message: TaskMessage, evidence: list[dict], memory: list[dict]) -> dict:
+    """Prioriza triagem, sem tratar controles declarados como controles comprovados."""
     candidates = []
+    relevance = {
+        'database': ('Alta', {'network_acl'}),
+        'http': ('Média', {'waf', 'tls'}),
+        'https': ('Média', {'waf', 'tls'}),
+        'ssh': ('Baixa', {'mfa', 'network_acl'}),
+    }
+    previous_level = {'Crítica': 'Alta', 'Alta': 'Média', 'Média': 'Baixa', 'Baixa': 'Baixa'}
     for item in evidence:
         if item['kind'] != 'recon':
             continue
         for asset in item['payload']['assets']:
-            services = asset['services']
-            for service, severity in (('http', 'Média'), ('database', 'Alta'), ('ssh', 'Baixa')):
-                if service in services:
-                    candidates.append(hypothesis(
-                        'exposure', [asset['asset'], service],
-                        f'Investigar superfície {service} em {asset["asset"]}', severity, item['id'],
-                        ['Verificar ACL e alcance real do serviço.',
-                         'Conferir autenticação, TLS e registros defensivos.'],
-                        'Metadados passivos não demonstram exploração. Controles declarados não foram testados.'))
+            controls = set(asset.get('controls', []))
+            for service in asset['services']:
+                if service not in relevance:
+                    continue
+                severity, relevant = relevance[service]
+                matched = sorted(controls & relevant)
+                if matched:
+                    severity = previous_level[severity]
+                caveat = 'Metadados passivos não demonstram exploração.'
+                if matched:
+                    caveat += (' Controles declarados (' + ', '.join(matched) +
+                               ') reduziram a prioridade em um nível; não foram testados.')
+                else:
+                    caveat += ' A eficácia dos controles não foi testada.'
+                candidates.append(hypothesis(
+                    'exposure', [asset['asset'], service],
+                    f'Investigar superfície {service} em {asset["asset"]}', severity, item['id'],
+                    ['Verificar ACL e alcance real do serviço.',
+                     'Conferir autenticação, TLS e registros defensivos.'],
+                    caveat))
     return {'hypotheses': candidates, 'recommendations': []}
 
 
