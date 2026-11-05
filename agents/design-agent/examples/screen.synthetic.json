@@ -1,0 +1,46 @@
+{
+  "schema": "designagent.screen.v1",
+  "screen": {
+    "name": "Dashboard fictício",
+    "platform": "mobile",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "components": [
+      {
+        "id": "button-main",
+        "role": "button",
+        "foreground": "#888888",
+        "background": "#FFFFFF",
+        "width": 32,
+        "height": 36,
+        "accessible_name": false,
+        "feedback": false,
+        "responsive": true
+      },
+      {
+        "id": "search",
+        "role": "input",
+        "foreground": "#111111",
+        "background": "#FFFFFF",
+        "width": 290,
+        "height": 42,
+        "label": false,
+        "accessible_name": true
+      },
+      {
+        "id": "brand-image",
+        "role": "image",
+        "alt": false
+      },
+      {
+        "id": "heading",
+        "role": "heading",
+        "foreground": "#111111",
+        "background": "#FFFFFF",
+        "large_text": true
+      }
+    ]
+  }
+}
