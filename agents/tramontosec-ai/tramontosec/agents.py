@@ -134,7 +134,7 @@ class Specialist:
         model_hypotheses, model_recommendations, trace = [], [], ()
         mode = 'deterministic'
         selected = list(message.allowed_tools)
-        if provider and self.profile == Profile.RED and callable(getattr(provider, 'agent_step', None)):
+        if provider and self.profile in (Profile.RED, Profile.STATIC) and callable(getattr(provider, 'agent_step', None)):
             try:
                 raw = run_agent_loop(provider, message, evidence, memory)
                 parsed = validate_model_proposals(message, evidence, memory, raw)
@@ -143,7 +143,7 @@ class Specialist:
                 mode = 'local_llm_agent'
             except (AgentLoopError, InvalidProposal, PermissionError, ProviderError,
                     OSError, TimeoutError, TypeError, KeyError, RecursionError, StopIteration):
-                uncertainties.append('Proposta Red inválida ou bloqueada; regras determinísticas preservadas.')
+                uncertainties.append('Proposta LLM inválida ou bloqueada; regras determinísticas preservadas.')
                 mode = 'deterministic_fallback'
         elif provider:
             # Omit objective text, asset identifiers, file paths and source. Only counts/IDs go to Ollama.
