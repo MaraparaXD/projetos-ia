@@ -21,7 +21,7 @@ class ConsultiveModelTest(unittest.TestCase):
         assisted = Specialist(Profile.RED).run(msg, evidence, [], FakeProvider())
         self.assertEqual(baseline.hypotheses, assisted.hypotheses)
         self.assertEqual(assisted.mode, 'local_llm_assisted')
-        self.assertEqual(assisted.model_assessment['summary'], 'Parecer não verificado')
+        self.assertEqual(assisted.model_assessment['summary'], 'Parecer não verificado.')
 
 
 if __name__ == '__main__':
