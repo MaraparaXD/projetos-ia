@@ -1,7 +1,6 @@
 """Sequential runtime; scope, stage gates and human decisions live outside the LLM."""
 from __future__ import annotations
 
-from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path

@@ -3,12 +3,13 @@ import unittest
 
 from tramontosec.agents import Specialist
 from tramontosec.contracts import Profile, TaskMessage
+from tramontosec.policy import allowed_tools
 
 
 class ConsultiveModelTest(unittest.TestCase):
     def test_model_cannot_reduce_or_modify_rule_findings(self):
         msg = TaskMessage('t1', 'lab', Profile.RED, 'Exame sintético', 'execucao',
-                          ('e1',), ('analyze_recon',))
+                          ('e1',), allowed_tools(Profile.RED))
         evidence = [{'id': 'e1', 'kind': 'recon', 'payload': {'assets': [
             {'asset': 'lab.example.invalid', 'services': ['database'], 'controls': []}]}}]
         class FakeProvider:

@@ -9,7 +9,7 @@ import unittest
 from tramontosec.dashboard import LocalServer
 from tramontosec.demo import run_demo
 from tramontosec.locking import execution_lock
-from tramontosec.store import create_project, project_root, snapshot
+from tramontosec.store import project_root, snapshot
 
 
 class DashboardTest(unittest.TestCase):

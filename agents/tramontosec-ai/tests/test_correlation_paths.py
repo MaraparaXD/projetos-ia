@@ -12,7 +12,7 @@ class CorrelationPathTest(unittest.TestCase):
     def test_relative_directory_prefix(self):
         self.assertTrue(_same_file('./src/a.py', 'src/a.py'))
         self.assertTrue(_same_file('././src/a.py', 'src/a.py'))
-        self.assertTrue(_same_file('.\\\\src\\\\a.py', 'src/a.py'))
+        self.assertTrue(_same_file(r'.\src\a.py', 'src/a.py'))
 
 
 if __name__ == '__main__':

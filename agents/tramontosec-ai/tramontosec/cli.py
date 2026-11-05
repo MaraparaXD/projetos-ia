@@ -9,7 +9,7 @@ import json
 import sqlite3
 import subprocess
 from pathlib import Path
-from .core import make_workspace, record_document, import_findings, list_findings, verify, review, export_report, no_sync_roots
+from .core import make_workspace, record_document, import_findings, list_findings, verify, review, export_report
 
 
 def cli() -> argparse.ArgumentParser:
