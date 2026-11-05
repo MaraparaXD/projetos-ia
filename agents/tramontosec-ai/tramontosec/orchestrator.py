@@ -167,8 +167,10 @@ def review_hypothesis(workspace: Path, project: str, key: str, decision: str,
     if decision == 'accepted' and not ack:
         raise PermissionError('Aceitação exige conferência independente e --ack-reviewed-evidence.')
     reviewer, reason = text(reviewer, 120), text(reason, 1000)
+    from .locking import execution_lock
     get_project(workspace, project)
-    with open_db(project_root(workspace, project)) as db:
+    root = project_root(workspace, project)
+    with execution_lock(root), open_db(root) as db:
         if db.execute("SELECT status FROM stages WHERE name='finalizacao'").fetchone()[0] == 'completed':
             raise PermissionError('Avaliação finalizada: decisões estão fechadas.')
         changed = db.execute('UPDATE hypotheses SET status=?,reviewer=?,reason=?,reviewed_at=? WHERE id=?',

@@ -8,6 +8,7 @@ import unittest
 
 from tramontosec.dashboard import LocalServer
 from tramontosec.demo import run_demo
+from tramontosec.locking import execution_lock
 from tramontosec.store import create_project, project_root, snapshot
 
 
@@ -104,6 +105,17 @@ class DashboardTest(unittest.TestCase):
         body['ack'] = True
         self.assertEqual(self.request('POST', '/api/review', body)[0], 200)
         self.assertEqual(snapshot(self.ws, 'demo')['hypotheses'][0]['status'], 'accepted')
+
+    def test_review_is_forbidden_while_runtime_lock_is_held(self):
+        key = snapshot(self.ws, 'demo')['hypotheses'][0]['id']
+        prior = snapshot(self.ws, 'demo')['hypotheses'][0]['status']
+        data = {'project': 'demo', 'id': key, 'decision': 'rejected',
+                'reviewer': 'Auditor', 'reason': 'Aguardando execução terminar', 'ack': False}
+        with execution_lock(project_root(self.ws, 'demo')):
+            status, _, body = self.request('POST', '/api/review', data)
+        self.assertEqual(status, 403)
+        self.assertIn('Outra execução', body)
+        self.assertEqual(snapshot(self.ws, 'demo')['hypotheses'][0]['status'], prior)
 
     def test_unknown_paths_and_bad_payload(self):
         for path in ('/../../private', '/audit.sqlite3', '/api/shell'):
