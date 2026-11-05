@@ -109,6 +109,11 @@ def _run(workspace: Path, project: str, provider: Provider | None = None) -> lis
         try:
             output = Specialist(msg.profile).run(msg, current['evidence'], current['hypotheses'], provider).to_dict()
             with open_db(root) as db:
+                # Trilha breve de uso de ferramentas; não persistir prompts nem cadeia de pensamento.
+                for step in output.get('reasoning_trace', [])[:12]:
+                    event(db, 'llm_read_tool', {
+                        'task_id': msg.task_id, 'profile': msg.profile.value,
+                        'tool': step['tool'], 'reason': step['reason']})
                 for h in output['hypotheses']:
                     if not set(h['evidence']) <= set(msg.evidence_ids):
                         raise PermissionError('Hipótese cita evidência fora do escopo.')

@@ -134,6 +134,19 @@ def snapshot(workspace: Path, project: str) -> dict:
     for item in tables['hypotheses']:
         for key in ('evidence', 'controls', 'profiles'):
             item[key] = json.loads(item.pop(key + '_json'))
+    # A origem é derivada das saídas versionadas; a tabela antiga permanece compatível.
+    origin_by_id = {}
+    trace_by_id = {}
+    for task in tables['tasks']:
+        output = task.get('output') or {}
+        for hypothesis in output.get('hypotheses', []):
+            key = hypothesis['id']
+            origin_by_id.setdefault(key, hypothesis.get('origin', 'rule'))
+            trace_by_id.setdefault(key, [])
+            trace_by_id[key].extend(output.get('reasoning_trace', [])[:6])
+    for item in tables['hypotheses']:
+        item['origin'] = origin_by_id.get(item['id'], 'rule')
+        item['reasoning_trace'] = trace_by_id.get(item['id'], [])[:6]
     for item in tables['recommendations']:
         item['payload'] = json.loads(item['payload'])
     for item in tables['runtime_events']:
