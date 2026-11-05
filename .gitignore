@@ -53,3 +53,7 @@ models/
 
 # Artefatos locais da ferramenta de design (não necessários para runtime)
 **/.impeccable/
+
+# Grafos exportados localmente podem conter caminhos e nomes internos
+**/graphify-out/
+**/graph.json
