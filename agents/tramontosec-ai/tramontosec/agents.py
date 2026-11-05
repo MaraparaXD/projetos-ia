@@ -134,7 +134,7 @@ class Specialist:
         model_hypotheses, model_recommendations, trace = [], [], ()
         mode = 'deterministic'
         selected = list(message.allowed_tools)
-        if provider and self.profile in (Profile.RED, Profile.STATIC) and callable(getattr(provider, 'agent_step', None)):
+        if provider and callable(getattr(provider, 'agent_step', None)):
             try:
                 raw = run_agent_loop(provider, message, evidence, memory)
                 parsed = validate_model_proposals(message, evidence, memory, raw)
@@ -183,7 +183,13 @@ class Specialist:
             else:
                 findings.append(candidate)
                 known[candidate['id']] = candidate
-        recommendations.extend(model_recommendations)
+        # Recomendações válidas do Blue complementam/substituem o baseline pelo ID,
+        # sem aceitar hipóteses rejeitadas e sem marcar controles como aplicados.
+        if model_recommendations:
+            by_id = {r['hypothesis_id']: r for r in recommendations}
+            for recommendation in model_recommendations:
+                by_id[recommendation['hypothesis_id']] = recommendation
+            recommendations = list(by_id.values())
         return AgentResult(message.task_id, self.profile, mode, tuple(findings), tuple(recommendations),
                            tuple(uncertainties), message.evidence_ids, assessment,
                            reasoning_trace=trace)
