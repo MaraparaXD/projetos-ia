@@ -70,7 +70,20 @@ def validate_model_proposals(message, evidence, memory, output):
             observed = [v if isinstance(v, str) else v.get('name') for v in asset.get('services', [])]
             if source not in refs or service not in observed:
                 raise InvalidProposal('Serviço não foi observado na evidência citada.')
-            key = _digest('exposure', [asset['asset'], service])
+            # O hash das regras de infraestrutura usa o tipo e a porta;
+            # conservar a identidade original para evitar duplicatas com LLM.
+            observed_service = next((
+                v for v in asset.get('services', [])
+                if (v if isinstance(v, str) else v.get('name')) == service
+            ), None)
+            if isinstance(observed_service, dict) and observed_service.get('published') == 'yes' and service == 'dokploy':
+                key = _digest('management-surface', [asset['asset'], service, observed_service.get('port')])
+            elif isinstance(observed_service, dict) and observed_service.get('published') == 'yes' and service == 'minio':
+                key = _digest('object-storage-surface', [asset['asset'], service, observed_service.get('port')])
+            elif isinstance(observed_service, dict) and observed_service.get('privileged') == 'yes' and service == 'buildkit':
+                key = _digest('privileged-build', [asset['asset'], service])
+            else:
+                key = _digest('exposure', [asset['asset'], service])
         elif message.profile == Profile.STATIC:
             if set(proposal) != {'rule', 'evidence_ids', 'severity', 'title', 'uncertainty'}:
                 raise InvalidProposal('Contrato Static inválido.')
