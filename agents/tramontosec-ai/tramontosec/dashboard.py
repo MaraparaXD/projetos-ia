@@ -11,7 +11,7 @@ import sqlite3
 from urllib.parse import parse_qs, urlsplit
 
 from .contracts import identifier
-from .orchestrator import export_project, review_hypothesis
+from .orchestrator import export_project, report_markdown, review_hypothesis
 from .store import list_projects, snapshot
 
 WEB = Path(__file__).parent / 'web'
@@ -103,7 +103,7 @@ class Handler(BaseHTTPRequestHandler):
                 if url.path == '/api/project':
                     self.json(200, snapshot(self.server.workspace, project))
                 else:
-                    self.send(200, export_project(self.server.workspace, project).read_bytes(), 'text/markdown; charset=utf-8')
+                    self.send(200, report_markdown(self.server.workspace, project).encode('utf-8'), 'text/markdown; charset=utf-8')
             else:
                 self.json(404, {'error': 'Recurso não encontrado.'})
         except PermissionError as exc:
@@ -124,7 +124,7 @@ class Handler(BaseHTTPRequestHandler):
             self.authenticated()
             if not hmac.compare_digest(self.headers.get('X-CSRF-Token', ''), self.server.csrf_token):
                 raise PermissionError('Confirmação de origem ausente. Reabra o dashboard.')
-            if self.path != '/api/review':
+            if self.path not in ('/api/review', '/api/export'):
                 self.json(404, {'error': 'Ação não disponível.'})
                 return
             if self.headers.get('Content-Type') != 'application/json':
@@ -134,6 +134,12 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError('Entrada ausente ou acima do limite.')
             body = self.rfile.read(length)
             data = json.loads(body)
+            if self.path == '/api/export':
+                if not isinstance(data, dict) or set(data) != {'project'}:
+                    raise ValueError('Contrato de exportação inválido.')
+                export_project(self.server.workspace, identifier(data['project']))
+                self.json(200, {'exported': True})
+                return
             if not isinstance(data, dict) or set(data) != {'project', 'id', 'decision', 'reviewer', 'reason', 'ack'}:
                 raise ValueError('Contrato de revisão inválido.')
             if type(data['ack']) is not bool:

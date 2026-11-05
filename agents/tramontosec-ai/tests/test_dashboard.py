@@ -8,7 +8,7 @@ import unittest
 
 from tramontosec.dashboard import LocalServer
 from tramontosec.demo import run_demo
-from tramontosec.store import create_project, snapshot
+from tramontosec.store import create_project, project_root, snapshot
 
 
 class DashboardTest(unittest.TestCase):
@@ -71,6 +71,26 @@ class DashboardTest(unittest.TestCase):
         code, _, content = self.request('GET', '/api/report?project=demo')
         self.assertEqual(code, 200)
         self.assertIn('preliminar', content)
+
+    def test_report_get_is_pure_and_export_post_is_protected(self):
+        report = project_root(self.ws, 'demo') / 'output' / 'TRAMONTO_PRELIMINAR.md'
+        if report.exists():
+            report.unlink()
+        old_events = len(snapshot(self.ws, 'demo')['runtime_events'])
+        status, _, body = self.request('GET', '/api/report?project=demo')
+        self.assertEqual(status, 200)
+        self.assertIn('TramontoSec AI', body)
+        self.assertFalse(report.exists())
+        self.assertEqual(len(snapshot(self.ws, 'demo')['runtime_events']), old_events)
+        self.assertEqual(self.request('POST', '/api/export', {'project': 'demo'},
+                                      {'X-CSRF-Token': 'wrong'})[0], 403)
+        self.assertEqual(self.request('POST', '/api/export', {'project': 'demo'},
+                                      {'Origin': 'http://external.invalid'})[0], 403)
+        self.assertFalse(report.exists())
+        self.assertEqual(self.request('POST', '/api/export', {'project': 'demo'})[0], 200)
+        self.assertTrue(report.exists())
+        self.assertEqual(len(snapshot(self.ws, 'demo')['runtime_events']), old_events + 1)
+        self.assertEqual(self.request('POST', '/api/export', {'project': '../x'})[0], 400)
 
     def test_csrf_dns_rebinding_external_origin_denied(self):
         for headers in ({'X-CSRF-Token': 'bad'}, {'Origin': 'http://external.invalid'}, {'Host': 'external.invalid'}, {'Sec-Fetch-Site': 'cross-site'}):
