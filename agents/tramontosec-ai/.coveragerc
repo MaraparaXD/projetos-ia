@@ -1,0 +1,6 @@
+[run]
+source = tramontosec
+
+[report]
+show_missing = True
+precision = 2

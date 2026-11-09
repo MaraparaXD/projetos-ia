@@ -36,10 +36,11 @@ class InvalidProposal(ValueError):
 # ponto e vírgula seguido de prosa comum.
 COMMAND_PATTERNS = (
     r'\brm\s+-', r'\bsudo\s+', r'\bcurl\s+', r'\bwget\s+', r'\bchmod\s+',
-    r'\bbash\s+-c\b', r'\bpowershell\b', r'\bInvoke-[A-Za-z]',
+    r'\bbash\s+-c\b', r'\bpowershell\b', r'\bInvoke-',
     r'\beval\s*\(', r'\bexec\s*\(', r'\|\s*sh\b', r'&&', r'\$\(',
     r';\s*(?:rm|sudo|curl|wget|chmod|bash|sh|powershell|pwsh|cmd|python3?|node|'
-    r'echo|printf|cat|cd|cp|mv|del|start|mkdir|touch|whoami|id)\b',
+    r'echo|printf|cat|cd|cp|mv|del|start|mkdir|touch|whoami|id|ls|dir|pwd|uname|'
+    r'kill|pkill|ssh|scp|docker|npm|pip|git|command)\b',
     r';\s*[A-Za-z_][A-Za-z0-9_.-]*\s*\(',
 )
 INSTRUCTION_PATTERNS = (
@@ -55,7 +56,7 @@ URL_PATTERN = re.compile(r'\b[a-z][a-z0-9+.-]*://|www\.', re.IGNORECASE)
 
 def _check_text(value, limit):
     if (type(value) is not str or value.count('\n') > 2
-            or any(unicodedata.category(c) in {'Cc', 'Cf', 'Cs'} and c != '\n' for c in value)):
+            or any(unicodedata.category(c) in {'Cc', 'Cf', 'Cs', 'Zl', 'Zp'} and c != '\n' for c in value)):
         raise InvalidProposal('Texto LLM contém controles ou quebras excessivas.')
     try:
         clean = text(value, limit)
@@ -64,7 +65,7 @@ def _check_text(value, limit):
     if (any(c in clean for c in '<>' + chr(96)) or URL_PATTERN.search(clean)
             or any(pattern.search(clean) for pattern in FORBIDDEN_PATTERNS)):
         raise InvalidProposal('Marcação, endereço, comando ou instrução não permitido.')
-    return clean.replace('\\\\n', ' ')
+    return clean.replace(chr(92) + 'n', ' ')
 
 
 def _digest(kind, identity):
@@ -155,13 +156,14 @@ def validate_model_proposals(message, evidence, memory, output):
                 caveat += (' modelo discorda do scanner; manter severidade do scanner como piso'
                            f' (modelo: {sev}; piso: {floor}).')
                 sev = floor
-            components = {a.get('component', '') for _, a in matches}
+            components = {a['component'] for _, a in matches if a.get('component')}
             if len(rules) == 1 and len(components) <= 1:
                 # A proposta repete uma regra e suas evidências: só acrescentar nota.
                 baseline_ids = sorted({_digest('static', [
                     a['rule_id'], a['location'], a['line'], a['component'], e['payload']['commit']
                 ]) for e, a in matches})
-            key = _digest('static-llm-group', [rules, refs])
+            # Conservar IDs históricos de agrupamentos de uma regra.
+            key = _digest('static-llm-group', [rules[0] if len(rules) == 1 else rules, refs])
         else:
             raise InvalidProposal('Perfil não aceita hipótese.')
         out_h.append({'id': key, 'title': title, 'severity': sev, 'evidence': refs,

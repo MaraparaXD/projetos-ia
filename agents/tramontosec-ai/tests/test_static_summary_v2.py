@@ -54,6 +54,7 @@ class StaticSummaryTest(unittest.TestCase):
         self.assertEqual(len(result.hypotheses), 3)
         extra = next(h for h in result.hypotheses if h['origin'] == 'llm')
         self.assertEqual(extra['severity'], 'Alta')
+        self.assertEqual(extra['id'], '9ff4b1139fbb293d8eb6db08')  # Identidade da versão anterior
         self.assertNotIn('_baseline_ids', extra)
 
     def test_multiple_rules_enforce_highest_floor(self):
@@ -84,3 +85,13 @@ class StaticSummaryTest(unittest.TestCase):
             after = snapshot(ws, 'lab')
             self.assertEqual(len(before['hypotheses']), len(after['hypotheses']))
             self.assertTrue(any('Conferir alcance adicional' in h['uncertainty'] for h in after['hypotheses']))
+
+
+    def test_missing_component_does_not_invent_additional_grouping(self):
+        data = scanner()
+        alert = data[0]['payload']['alerts'][0]
+        data[0]['payload']['alerts'].append({**alert, 'component': '', 'location': 'src/unknown.py'})
+        result = Specialist(Profile.STATIC).run(message(), data, [], FakeProvider([final([proposal()])]))
+        self.assertEqual(result.mode, 'local_llm_agent')
+        self.assertEqual(len(result.hypotheses), 2)
+        self.assertTrue(all(h['origin'] == 'rule' for h in result.hypotheses))

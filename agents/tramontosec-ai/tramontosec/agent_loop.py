@@ -139,7 +139,7 @@ def readonly_tool(message, name, args, evidence, memory, rule_aliases=None):
         if not set(args) <= {'status'}:
             raise AgentLoopError('Filtro inválido.')
         status = args.get('status')
-        if status is not None and status not in {'candidate', 'in_review', 'accepted', 'rejected'}:
+        if status is not None and (type(status) is not str or status not in {'candidate', 'in_review', 'accepted', 'rejected'}):
             raise AgentLoopError('Estado inválido.')
         return {'hypotheses': [
             {'id': h['id'], 'severity': h['severity'], 'status': h.get('status', 'candidate')}
