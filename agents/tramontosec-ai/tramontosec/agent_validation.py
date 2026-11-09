@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+import unicodedata
 
 from .contracts import Profile, text
 
@@ -27,14 +29,41 @@ class InvalidProposal(ValueError):
     pass
 
 
+# Filtro heurístico explícito para propostas, não um interpretador nem uma
+# garantia linguística. Limites de capacidade e revisão humana continuam obrigatórios.
+# Fronteiras de palavra evitam bloquear "execução", "aproveitar" ou
+# ponto e vírgula seguido de prosa comum.
+COMMAND_PATTERNS = (
+    r'\brm\s+-', r'\bsudo\s+', r'\bcurl\s+', r'\bwget\s+', r'\bchmod\s+',
+    r'\bbash\s+-c\b', r'\bpowershell\b', r'\bInvoke-[A-Za-z]',
+    r'\beval\s*\(', r'\bexec\s*\(', r'\|\s*sh\b', r'&&', r'\$\(',
+    r';\s*(?:rm|sudo|curl|wget|chmod|bash|sh|powershell|pwsh|cmd|python3?|node|'
+    r'echo|printf|cat|cd|cp|mv|del|start|mkdir|touch|whoami|id)\b',
+    r';\s*[A-Za-z_][A-Za-z0-9_.-]*\s*\(',
+)
+INSTRUCTION_PATTERNS = (
+    r'\b(?:ignore|ignorem|ignorar|disregard|override|bypass)\b',
+    r'\bdesconsidere\s+(?:as\s+)?regras\b', r'\baceite\s+tudo\b',
+    r'\b(?:aprove|aprovar|approve)\b', r'\baccept\s+(?:all|everything)\b',
+    r'\bmark\s+as\s+accepted\b',
+)
+FORBIDDEN_PATTERNS = tuple(re.compile(pattern, re.IGNORECASE)
+                           for pattern in (*COMMAND_PATTERNS, *INSTRUCTION_PATTERNS))
+URL_PATTERN = re.compile(r'\b[a-z][a-z0-9+.-]*://|www\.', re.IGNORECASE)
+
+
 def _check_text(value, limit):
+    if (type(value) is not str or value.count('\n') > 2
+            or any(unicodedata.category(c) in {'Cc', 'Cf', 'Cs'} and c != '\n' for c in value)):
+        raise InvalidProposal('Texto LLM contém controles ou quebras excessivas.')
     try:
         clean = text(value, limit)
     except (TypeError, ValueError) as exc:
         raise InvalidProposal('Texto LLM inválido.') from exc
-    if any(c in clean for c in '<>' + chr(96)) or 'http://' in clean or 'https://' in clean:
-        raise InvalidProposal('Marcação ou endereço não permitido.')
-    return clean.replace('\\n', ' ')
+    if (any(c in clean for c in '<>' + chr(96)) or URL_PATTERN.search(clean)
+            or any(pattern.search(clean) for pattern in FORBIDDEN_PATTERNS)):
+        raise InvalidProposal('Marcação, endereço, comando ou instrução não permitido.')
+    return clean.replace('\\\\n', ' ')
 
 
 def _digest(kind, identity):
