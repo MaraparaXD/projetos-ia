@@ -133,17 +133,24 @@ class Specialist:
             raise PermissionError('Evidências ou perfil não correspondem ao contrato.')
         assessment, uncertainties = None, ['Concordância entre especialistas não constitui evidência independente.']
         model_hypotheses, model_recommendations, trace = [], [], ()
+        steps_used = validated_hypotheses = validated_recommendations = 0
         mode = 'deterministic'
         selected = list(message.allowed_tools)
         if provider and callable(getattr(provider, 'agent_step', None)):
             try:
                 raw = run_agent_loop(provider, message, evidence, memory)
+                steps_used = raw['steps_used']
+                trace = tuple(raw['reasoning_trace'])
                 parsed = validate_model_proposals(message, evidence, memory, raw)
                 model_hypotheses, model_recommendations = parsed['hypotheses'], parsed['recommendations']
-                trace = tuple(raw['reasoning_trace'])
+                validated_hypotheses = len(parsed['hypotheses'])
+                validated_recommendations = len(parsed['recommendations'])
                 mode = 'local_llm_agent'
             except (AgentLoopError, InvalidProposal, PermissionError, ProviderError,
-                    OSError, TimeoutError, TypeError, KeyError, RecursionError, StopIteration):
+                    OSError, TimeoutError, TypeError, KeyError, RecursionError, StopIteration) as exc:
+                steps_used = getattr(exc, 'steps_used', steps_used)
+                trace = getattr(exc, 'reasoning_trace', trace)
+                uncertainties.append('fallback_reason=' + type(exc).__name__)
                 uncertainties.append('Proposta LLM inválida ou bloqueada; regras determinísticas preservadas.')
                 mode = 'deterministic_fallback'
         elif provider:
@@ -166,7 +173,8 @@ class Specialist:
                 assessment = validate_assessment(provider.assess(message, meta), message)
                 mode = 'local_llm_assisted'
                 # Parecer consultivo: o modelo não determina o conjunto de regras executadas.
-            except (ProviderError, OSError, TimeoutError):
+            except (ProviderError, OSError, TimeoutError) as exc:
+                uncertainties.append('fallback_reason=' + type(exc).__name__)
                 uncertainties.append('Provedor falhou ou retornou dados inválidos. Sem inferência utilizável; fallback determinístico.')
                 mode = 'deterministic_fallback'
         else:
@@ -202,4 +210,6 @@ class Specialist:
         recommendations = list(by_origin.values())
         return AgentResult(message.task_id, self.profile, mode, tuple(findings), tuple(recommendations),
                            tuple(uncertainties), message.evidence_ids, assessment,
-                           reasoning_trace=trace)
+                           reasoning_trace=trace, steps_used=steps_used,
+                           validated_hypotheses=validated_hypotheses,
+                           validated_recommendations=validated_recommendations)

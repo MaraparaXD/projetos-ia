@@ -19,6 +19,9 @@ def add_commands(subs):
     subs.add_parser('projects', help='Listar projetos e escopos')
     subs.add_parser('agents', help='Consultar especialistas e ferramentas permitidas')
     subs.add_parser('models', help='Consultar disponibilidade do Ollama local, sem inferência')
+    check = subs.add_parser('agent-check', help='Medir cinco execuções por perfil em workspace sintético temporário')
+    check.add_argument('--model', required=True)
+    check.add_argument('--ack-local-model', action='store_true')
     for name, help_text in (
         ('audit', 'Consultar estado, etapas, tarefas e hipóteses de um projeto'),
         ('history', 'Consultar histórico de decisões e atividades'),
@@ -72,14 +75,17 @@ def add_commands(subs):
     dash.add_argument('--port', type=int, default=8765)
 
 
-def dispatch(args, workspace: Path) -> bool:
+def dispatch(args, workspace: Path | None, provider_factory=None) -> bool:
     from . import evidence, orchestrator as rt, store
     from .contracts import Profile
     from .policy import allowed_tools
     from .providers import OllamaProvider, local_models
     command = args.command
     result = None
-    if command == 'project-create':
+    if command == 'agent-check':
+        from .agent_check import run_agent_check
+        result = run_agent_check(args.model, args.ack_local_model, provider_factory)
+    elif command == 'project-create':
         result = store.create_project(workspace, args.project, args.name, args.objective, args.assets,
                                       args.repo, args.synthetic, args.ack_authorized)
     elif command == 'projects':
@@ -130,4 +136,7 @@ def dispatch(args, workspace: Path) -> bool:
     else:
         return False
     print(json.dumps(result, ensure_ascii=False, indent=2))
+    if command == 'agent-check' and not result['available']:
+        from .providers import ProviderError
+        raise ProviderError(result['error'])
     return True

@@ -10,6 +10,7 @@ import json
 from .agent_validation import InvalidProposal, _check_text
 from .policy import allowed_read_tools, authorize_read_tool
 from .scanners import RuleAliases, model_alert_level
+from .providers import ProviderError
 
 
 MAX_STEPS = 6
@@ -156,10 +157,21 @@ def readonly_tool(message, name, args, evidence, memory, rule_aliases=None):
 
 
 def run_agent_loop(provider, message, evidence, memory, max_steps=MAX_STEPS):
+    """Preserva contagem e trilha sanitizada também em falhas, sem texto bruto."""
+    stats = {'steps_used': 0, 'trace': []}
+    try:
+        return _run_agent_loop(provider, message, evidence, memory, max_steps, stats)
+    except Exception as exc:
+        exc.steps_used = stats['steps_used']
+        exc.reasoning_trace = tuple(stats['trace'])
+        raise
+
+
+def _run_agent_loop(provider, message, evidence, memory, max_steps, stats):
     """Executa até max_steps chamadas, devolvendo final e trilha resumida."""
     if type(max_steps) is not int or not 1 <= max_steps <= 12:
         raise AgentLoopError('Limite de passos inválido.')
-    trace = []
+    trace = stats['trace']
     rule_aliases = RuleAliases(evidence)
     context = {
         'schema': 'tramontosec.loop.v1', 'profile': message.profile.value,
@@ -175,8 +187,11 @@ def run_agent_loop(provider, message, evidence, memory, max_steps=MAX_STEPS):
     for _ in range(max_steps):
         if len(json.dumps(context, ensure_ascii=False)) > MAX_CONTEXT_CHARS:
             raise AgentLoopError('Contexto do modelo ultrapassou o orçamento.')
+        stats['steps_used'] += 1
         try:
             result = provider.agent_step(message, context)
+        except ProviderError:
+            raise
         except (OSError, ValueError, TimeoutError, TypeError, KeyError) as exc:
             raise AgentLoopError('Falha no provedor consultivo.') from exc
         if (type(result) is not dict or len(json.dumps(result, ensure_ascii=False)) > MAX_RESPONSE_CHARS
@@ -188,7 +203,7 @@ def run_agent_loop(provider, message, evidence, memory, max_steps=MAX_STEPS):
             if type(result['hypotheses']) is not list or type(result['recommendations']) is not list:
                 raise AgentLoopError('Listas finais inválidas.')
             return {'hypotheses': result['hypotheses'], 'recommendations': result['recommendations'],
-                    'reasoning_trace': trace}
+                    'reasoning_trace': trace, 'steps_used': stats['steps_used']}
         fields = {'action', 'tool', 'args'}
         if set(result) not in (fields, fields | {'why'}) or type(result['tool']) is not str:
             raise AgentLoopError('Chamada de ferramenta fora do contrato.')

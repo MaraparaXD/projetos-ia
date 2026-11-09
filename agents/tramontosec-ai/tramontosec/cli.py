@@ -16,7 +16,7 @@ def cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog='tramontosec', description='TramontoSec AI v0.3 — auditoria passiva, especialistas e revisão humana')
     from . import __version__
     parser.add_argument('--version', action='version', version=__version__)
-    parser.add_argument('--workspace', type=Path, required=True, help='Pasta local autorizada, privada e fora de sincronização')
+    parser.add_argument('--workspace', type=Path, help='Pasta local autorizada, privada e fora de sincronização')
     subs = parser.add_subparsers(dest='command', required=True)
     ini = subs.add_parser('init', help='Inicializar workspace legado')
     ini.add_argument('--ack-authorized-secure-storage', action='store_true', required=True,
@@ -84,8 +84,11 @@ def main() -> None:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, 'reconfigure'):
             stream.reconfigure(encoding='utf-8', errors='backslashreplace')
-    args = cli().parse_args()
-    workspace = args.workspace.expanduser()
+    parser = cli()
+    args = parser.parse_args()
+    if args.command != 'agent-check' and args.workspace is None:
+        parser.error('o argumento --workspace é obrigatório para este comando.')
+    workspace = args.workspace.expanduser() if args.workspace else None
     try:
         from .cli_v03 import dispatch
         if dispatch(args, workspace):

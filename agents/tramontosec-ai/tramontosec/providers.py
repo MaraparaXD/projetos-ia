@@ -72,6 +72,14 @@ class OllamaProvider:
             raise ValueError('Nome de modelo local inválido.')
         self.model, self.timeout = model, timeout
 
+    def check_available(self) -> None:
+        """Preflight sem inferência, usando a mesma checagem GGUF inalterada."""
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+        try:
+            require_downloaded_model(opener, self.model, min(self.timeout, 5))
+        except (OSError, ValueError, TypeError, KeyError, RecursionError) as exc:
+            raise ProviderError('Ollama ou modelo GGUF local indisponível; agent-check não iniciado.') from exc
+
     def assess(self, message: TaskMessage, metadata: dict) -> dict:
         roles = {
             'red': 'Modele ameaças de exposição passiva e indique contraprovas de alcance, TLS e autenticação.',

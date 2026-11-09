@@ -71,3 +71,23 @@ eficácia real de detecção**. O próximo desenho científico precisa de cenár
 inéditos, ground truth independente, revisão cega, comparabilidade de modelo,
 hardware, orçamento de inferência, distribuição de tempos e intervalos de
 confiança. Logs, segredos e ativos reais não devem entrar na fixture.
+
+
+## Ensaio local de robustez dos agentes
+
+Comando: python -m tramontosec agent-check --model NOME --ack-local-model
+
+Executa cinco repetições por perfil, na ordem Red → Static → Blue, usando a
+demonstração sintética em workspace temporário apagado ao terminar. Não usa o
+workspace indicado pelo auditor. O preflight usa a mesma checagem de modelo GGUF
+local do adaptador; indisponibilidade encerra com erro, sem simular inferência.
+
+Cada repetição informa modo, classe do fallback (sem conteúdo do modelo), passos
+de inferência tentados (incluindo o final), quantidades produzidas, propostas de
+modelo validadas pelo contrato e tempo com orquestração. Proposta validada não é
+hipótese aceita pelo auditor: todas continuam candidatas e não verificadas.
+Erros do adaptador durante a execução também produzem saída não zero.
+
+Esta entrega testa o comando com FakeProvider. O mantenedor ainda precisa
+executá-lo com seu próprio modelo GGUF local; não há resultados reais de modelo
+declarados aqui.

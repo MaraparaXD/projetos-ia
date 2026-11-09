@@ -75,6 +75,9 @@ class AgentResult:
     model_assessment: dict | None = None
     schema: str = 'tramontosec.result.v1'
     reasoning_trace: tuple[ReasoningStep, ...] = ()
+    steps_used: int = 0
+    validated_hypotheses: int = 0
+    validated_recommendations: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)
