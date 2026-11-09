@@ -32,8 +32,9 @@ class StaticLLMTest(unittest.TestCase):
         ])
         result = Specialist(Profile.STATIC).run(self.msg, self.evidence, [], fake)
         self.assertEqual(result.mode, 'local_llm_agent')
-        self.assertEqual(len(result.hypotheses), 2)
-        self.assertEqual(sum(h['origin'] == 'llm' for h in result.hypotheses), 1)
+        self.assertEqual(len(result.hypotheses), 1)
+        self.assertEqual(result.hypotheses[0]['origin'], 'rule')
+        self.assertIn('Possível falso positivo', result.hypotheses[0]['uncertainty'])
         self.assertEqual(result.hypotheses[-1]['evidence'], ['e1'])
 
     def test_nonexistent_rule_falls_back(self):

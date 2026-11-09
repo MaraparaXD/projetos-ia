@@ -103,6 +103,7 @@ def validate_model_proposals(message, evidence, memory, output):
         title = _check_text(proposal.get('title'), 160)
         caveat = _check_text(proposal.get('uncertainty'), 500)
         refs = sorted(set(refs))
+        baseline_ids = []
         if message.profile == Profile.RED:
             if set(proposal) != {'asset_alias', 'service', 'evidence_ids', 'severity', 'title', 'uncertainty'}:
                 raise InvalidProposal('Contrato Red inválido.')
@@ -128,31 +129,47 @@ def validate_model_proposals(message, evidence, memory, output):
             else:
                 key = _digest('exposure', [asset['asset'], service])
         elif message.profile == Profile.STATIC:
-            if set(proposal) != {'rule', 'evidence_ids', 'severity', 'title', 'uncertainty'}:
+            fields = {'evidence_ids', 'severity', 'title', 'uncertainty'}
+            if set(proposal) == fields | {'rule'}:
+                proposed_rules = [proposal['rule']]
+            elif set(proposal) == fields | {'rules'}:
+                proposed_rules = proposal['rules']
+            else:
                 raise InvalidProposal('Contrato Static inválido.')
+            if (type(proposed_rules) is not list or not 1 <= len(proposed_rules) <= 10
+                    or any(type(r) is not str for r in proposed_rules)):
+                raise InvalidProposal('Lista de regras inválida.')
+            rule_aliases = RuleAliases(evidence)
             try:
-                rule = RuleAliases(evidence).resolve(proposal['rule'])
+                rules = sorted({rule_aliases.resolve(rule) for rule in proposed_rules})
             except ValueError as exc:
                 raise InvalidProposal('Regra inválida.') from exc
-            if not any(known[r]['kind'] == 'scanner' and
-                       any(a['rule_id'] == rule for a in known[r]['payload'].get('alerts', []))
-                       for r in refs):
+            matches = [(known[r], a) for r in refs if known[r]['kind'] == 'scanner'
+                       for a in known[r]['payload'].get('alerts', []) if a['rule_id'] in rules]
+            if ({a['rule_id'] for _, a in matches} != set(rules)
+                    or {e['id'] for e, _ in matches} != set(refs)):
                 raise InvalidProposal('Regra sem evidência correspondente.')
-            floors = [scanner_severity(a['severity']) for r in refs
-                      if known[r]['kind'] == 'scanner'
-                      for a in known[r]['payload'].get('alerts', []) if a['rule_id'] == rule]
+            floors = [scanner_severity(a['severity']) for _, a in matches]
             floor = max(floors, key=lambda v: SEVERITY_ORDER.get(v, -1))
             if SEVERITY_ORDER.get(sev, -1) < SEVERITY_ORDER.get(floor, -1):
                 caveat += (' modelo discorda do scanner; manter severidade do scanner como piso'
                            f' (modelo: {sev}; piso: {floor}).')
                 sev = floor
-            key = _digest('static-llm-group', [rule, refs])
+            components = {a.get('component', '') for _, a in matches}
+            if len(rules) == 1 and len(components) <= 1:
+                # A proposta repete uma regra e suas evidências: só acrescentar nota.
+                baseline_ids = sorted({_digest('static', [
+                    a['rule_id'], a['location'], a['line'], a['component'], e['payload']['commit']
+                ]) for e, a in matches})
+            key = _digest('static-llm-group', [rules, refs])
         else:
             raise InvalidProposal('Perfil não aceita hipótese.')
         out_h.append({'id': key, 'title': title, 'severity': sev, 'evidence': refs,
                       'controls': ['Conferir hipótese com evidência independente.'],
                       'uncertainty': caveat + ' Sugestão de modelo não verificada.',
                       'origin': 'llm'})
+        if baseline_ids:
+            out_h[-1]['_baseline_ids'] = baseline_ids
     if message.profile != Profile.BLUE and recommendations:
         raise InvalidProposal('Recomendações pertencem ao Blue.')
     for rec in recommendations:

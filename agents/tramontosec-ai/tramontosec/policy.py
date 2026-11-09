@@ -46,6 +46,7 @@ def check_message(message: TaskMessage, project: str) -> None:
 READ_TOOLS = MappingProxyType({
     'list_assets': ToolSpec('list_assets', (Profile.RED,)),
     'get_alerts': ToolSpec('get_alerts', (Profile.STATIC,)),
+    'get_alert_summary': ToolSpec('get_alert_summary', (Profile.STATIC,)),
     'read_evidence': ToolSpec('read_evidence', (Profile.RED, Profile.STATIC, Profile.BLUE)),
     'list_hypotheses': ToolSpec('list_hypotheses', (Profile.RED, Profile.STATIC, Profile.BLUE)),
     'get_hypothesis': ToolSpec('get_hypothesis', (Profile.BLUE,)),

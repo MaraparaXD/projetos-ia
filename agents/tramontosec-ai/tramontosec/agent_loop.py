@@ -17,6 +17,7 @@ MAX_RESPONSE_CHARS = 12000
 REASONS = {
     'list_assets': 'Consultar serviços e controles declarados, com aliases.',
     'get_alerts': 'Consultar regras e severidades sem caminhos de código.',
+    'get_alert_summary': 'Contar alertas, arquivos e componentes por regra, sem identificá-los.',
     'read_evidence': 'Conferir metadados da evidência autorizada.',
     'list_hypotheses': 'Consultar hipóteses registradas e estados humanos.',
     'get_hypothesis': 'Conferir referência de hipótese sem dados sensíveis.',
@@ -69,6 +70,37 @@ def readonly_tool(message, name, args, evidence, memory, rule_aliases=None):
                     ],
                 })
         return {'assets': assets[:50]}
+    if name == 'get_alert_summary':
+        if not set(args) <= {'rule'}:
+            raise AgentLoopError('Filtro desconhecido.')
+        rule_aliases = rule_aliases or RuleAliases(evidence)
+        rule = args.get('rule')
+        if rule is not None:
+            try:
+                rule = rule_aliases.resolve(rule)
+            except ValueError as exc:
+                raise AgentLoopError('Regra de filtro inválida.') from exc
+        groups = {}
+        for record in evidence:
+            if record['kind'] != 'scanner':
+                continue
+            for alert in record['payload'].get('alerts', []):
+                raw_rule = alert['rule_id']
+                if rule is not None and rule != raw_rule:
+                    continue
+                group = groups.setdefault(raw_rule, {'count': 0, 'levels': set(),
+                                                     'files': set(), 'components': set()})
+                group['count'] += 1
+                group['levels'].add(model_alert_level(alert['severity']))
+                if alert.get('location') and not alert['location'].startswith('[path-'):
+                    group['files'].add(alert['location'])
+                if alert.get('component'):
+                    group['components'].add(alert['component'])
+        rows = [{'rule': rule_aliases.to_model(key), 'alert_count': value['count'],
+                 'severities': sorted(value['levels']), 'file_count': len(value['files']),
+                 'component_count': len(value['components'])} for key, value in groups.items()]
+        rows.sort(key=lambda row: row['rule'])
+        return {'rules': rows[:100], 'rule_count': len(rows), 'truncated': len(rows) > 100}
     if name == 'get_alerts':
         if not set(args) <= {'rule', 'severity'}:
             raise AgentLoopError('Filtro desconhecido.')

@@ -182,14 +182,16 @@ class Specialist:
         for candidate in findings:
             candidate.setdefault('origin', 'rule')
         for candidate in model_hypotheses:
-            existing = known.get(candidate['id'])
-            if existing:
-                existing['uncertainty'] += (' O modelo propôs hipótese equivalente; sugestão não verificada. '
-                                            + candidate['uncertainty'])
-                if candidate['severity'] != existing['severity']:
-                    existing['uncertainty'] += (f' Modelo discordou da severidade da regra: '
-                                                f'{candidate["severity"]}; regra preservada: '
-                                                f'{existing["severity"]}.')
+            merge_ids = candidate.pop('_baseline_ids', [candidate['id']])
+            matches = [known[key] for key in merge_ids if key in known]
+            if matches:
+                for existing in matches:
+                    existing['uncertainty'] += (' O modelo propôs hipótese equivalente; sugestão não verificada. '
+                                                + candidate['title'] + ': ' + candidate['uncertainty'])
+                    if candidate['severity'] != existing['severity']:
+                        existing['uncertainty'] += (f' Modelo discordou da severidade da regra: '
+                                                    f'{candidate["severity"]}; regra preservada: '
+                                                    f'{existing["severity"]}.')
             else:
                 findings.append(candidate)
                 known[candidate['id']] = candidate

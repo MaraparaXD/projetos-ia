@@ -122,8 +122,8 @@ def _run(workspace: Path, project: str, provider: Provider | None = None) -> lis
                         references = sorted(set(json.loads(previous['evidence_json']) + h['evidence']))
                         profiles = sorted(set(json.loads(previous['profiles_json']) + [msg.profile.value]))
                         changed = references != sorted(json.loads(previous['evidence_json']))
-                        db.execute('UPDATE hypotheses SET evidence_json=?,profiles_json=? WHERE id=?',
-                                   (json.dumps(references), json.dumps(profiles), h['id']))
+                        db.execute('UPDATE hypotheses SET evidence_json=?,profiles_json=?,uncertainty=? WHERE id=?',
+                                   (json.dumps(references), json.dumps(profiles), h['uncertainty'], h['id']))
                         if changed:
                             db.execute("UPDATE hypotheses SET status='candidate',reviewer=NULL,reason=NULL,reviewed_at=NULL WHERE id=?", (h['id'],))
                     else:
