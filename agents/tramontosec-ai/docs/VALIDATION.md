@@ -136,3 +136,29 @@ Ruff All checks passed!. Uma execução anterior dessa repetição teve WinError
 10053 no teste HTTP negativo de CSRF. O caso isolado passou em 2,127 s e a
 repetição completa acima passou, sem relaxar assertivas ou modificar CSRF/CSP.
 A causa estrutural do reset local não foi estabelecida.
+
+## Validação da integração em main — GitHub Actions
+
+O workflow [TramontoSec tests](https://github.com/MaraparaXD/projetos-ia/actions/runs/42632284320) foi concluído com sucesso em
+09/11/2026 para o commit 2cae2934dc0ed5d746ec329f5d1754c49ae4a523,
+presente na main e na fix/agentes-ia-v2. Foram sete jobs aprovados:
+
+| Ambiente | Resultado real | Tempo da suíte |
+|---|---|---:|
+| Ubuntu / Python 3.11 | 172 testes, OK, sem skips | 7,079 s |
+| Ubuntu / Python 3.13 | 172 testes, OK, sem skips | 5,352 s |
+| Windows / Python 3.11 | 172 testes, OK, sem skips | 71,657 s |
+| Windows / Python 3.13 | 172 testes, OK, sem skips | 91,948 s |
+
+O job Coverage/Ubuntu Python 3.13 executou 172 testes em 8,070 s e mediu
+93,57% (2378 linhas executáveis, 153 não cobertas), passando com piso 91,52%.
+O valor local de 93,52% acima permanece como medição Windows comparável à base.
+Os jobs de Ruff/JavaScript e demonstração sintética também passaram.
+Não houve inferência real de LLM nesses jobs.
+
+Esta atualização registra a integração solicitada em main após os 11 commits
+da revisão. Altera somente documentação; os módulos de produção são os mesmos
+que passaram na matriz acima. A branch principal anterior não foi apagada.
+
+Verificação local desta atualização documental: 172 testes em 50,105 s,
+171 passaram e um foi ignorado por symlink; Ruff All checks passed!.

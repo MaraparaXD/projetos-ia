@@ -2,8 +2,9 @@
 
 Conclusão local: 09/11/2026. Repositório projetos-ia; escopo agents/tramontosec-ai.
 Branch de correções: fix/agentes-ia-v2, derivada de feat/agentes-ia no commit `3534bfb6bd58c8703aea9c4216e1fe09e2e57c8e`.
-Destino solicitado para publicação: main. A inspeção remota não encontrou main; a principal anterior
-MaraparaXD/Projetos-pessoas é ancestral do trabalho. O histórico pode ser preservado sem force push.
+Publicação concluída em main e fix/agentes-ia-v2, com os 11 commits da revisão.
+A main não existia e foi criada preservando o histórico ancestral de
+MaraparaXD/Projetos-pessoas, sem force push ou remoção da branch anterior.
 Nenhum release estável foi publicado. Licença e contato de segurança continuam TODOs.
 
 ## Resultado medido
@@ -196,7 +197,7 @@ Recomendações mantêm applied=False e independent_confirmation=False; modelos 
 3. **Modelo local:** escolher GGUF e executar o comando abaixo. Ainda não há resultado real de modelo.
 4. **Limite de passos:** confirmar o padrão de seis turnos com base no ensaio. A API aceita 1–12; a CLI não amplia o padrão.
 5. **Avaliação empírica:** cenários inéditos, ground truth e revisão independente continuam pendentes.
-6. **Matriz remota:** os resultados Windows/Linux Python 3.11/3.13 devem ser consultados no GitHub Actions da publicação.
+6. **Matriz remota:** sete jobs aprovados, Windows/Linux Python 3.11/3.13, conforme o registro de integração abaixo.
 7. **Navegador real:** houve teste HTTP e DOM em memória, sem nova revisão visual de desktop/mobile.
 8. **Dados históricos:** registros antigos não são apagados nem automaticamente reclassificados; duplicatas históricas exigem revisão humana.
 
@@ -231,3 +232,30 @@ A ocorrência deve ser acompanhada na matriz Windows/Linux da CI.
 - SQLite não é cifrado pelo programa e eventos não constituem um registro inviolável.
 
 Detalhes reproduzíveis e números medidos: [VALIDATION.md](VALIDATION.md).
+
+
+## Validação da integração em main — GitHub Actions
+
+O workflow [TramontoSec tests](https://github.com/MaraparaXD/projetos-ia/actions/runs/42632284320) foi concluído com sucesso em
+09/11/2026 para o commit 2cae2934dc0ed5d746ec329f5d1754c49ae4a523,
+presente na main e na fix/agentes-ia-v2. Foram sete jobs aprovados:
+
+| Ambiente | Resultado real | Tempo da suíte |
+|---|---|---:|
+| Ubuntu / Python 3.11 | 172 testes, OK, sem skips | 7,079 s |
+| Ubuntu / Python 3.13 | 172 testes, OK, sem skips | 5,352 s |
+| Windows / Python 3.11 | 172 testes, OK, sem skips | 71,657 s |
+| Windows / Python 3.13 | 172 testes, OK, sem skips | 91,948 s |
+
+O job Coverage/Ubuntu Python 3.13 executou 172 testes em 8,070 s e mediu
+93,57% (2378 linhas executáveis, 153 não cobertas), passando com piso 91,52%.
+O valor local de 93,52% acima permanece como medição Windows comparável à base.
+Os jobs de Ruff/JavaScript e demonstração sintética também passaram.
+Não houve inferência real de LLM nesses jobs.
+
+Esta atualização registra a integração solicitada em main após os 11 commits
+da revisão. Altera somente documentação; os módulos de produção são os mesmos
+que passaram na matriz acima. A branch principal anterior não foi apagada.
+
+Verificação local desta atualização documental: 172 testes em 50,105 s,
+171 passaram e um foi ignorado por symlink; Ruff All checks passed!.
