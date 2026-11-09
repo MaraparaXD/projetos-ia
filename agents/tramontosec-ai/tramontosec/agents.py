@@ -6,7 +6,7 @@ import json
 
 from .contracts import AgentResult, Profile, TaskMessage
 from .agent_loop import AgentLoopError, run_agent_loop
-from .agent_validation import InvalidProposal, validate_model_proposals
+from .agent_validation import InvalidProposal, scanner_severity, validate_model_proposals
 from .policy import authorize, check_message
 from .red_team import analyze_infra
 from .providers import Provider, ProviderError, validate_assessment
@@ -67,7 +67,7 @@ def analyze_static(message: TaskMessage, evidence: list[dict], memory: list[dict
             candidates.append(hypothesis(
                 'static', [alert['rule_id'], alert['location'], alert['line'], alert['component'], data['commit']],
                 f'Revisar {alert["rule_id"]} em {alert["location"]}:{alert["line"] or "?"}',
-                {'CRITICAL': 'Crítica', 'HIGH': 'Alta', 'MEDIUM': 'Média', 'LOW': 'Baixa'}.get(alert['severity'].upper(), 'Indeterminada'),
+                scanner_severity(alert['severity']),
                 item['id'], ['Inspecionar caminho alcançável, autenticação e autorização.',
                              'Conferir versão implantada, sanitização e falso positivo.'],
                 'Alerta de ferramenta não confirma vulnerabilidade. '
@@ -179,7 +179,12 @@ class Specialist:
         for candidate in model_hypotheses:
             existing = known.get(candidate['id'])
             if existing:
-                existing['uncertainty'] += ' O modelo propôs hipótese equivalente; sugestão não verificada.'
+                existing['uncertainty'] += (' O modelo propôs hipótese equivalente; sugestão não verificada. '
+                                            + candidate['uncertainty'])
+                if candidate['severity'] != existing['severity']:
+                    existing['uncertainty'] += (f' Modelo discordou da severidade da regra: '
+                                                f'{candidate["severity"]}; regra preservada: '
+                                                f'{existing["severity"]}.')
             else:
                 findings.append(candidate)
                 known[candidate['id']] = candidate

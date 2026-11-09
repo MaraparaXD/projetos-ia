@@ -7,6 +7,19 @@ import json
 from .contracts import Profile, text
 
 SEVERITIES = frozenset({'Crítica', 'Alta', 'Média', 'Baixa', 'Informativa', 'Indeterminada'})
+# Indeterminada não participa da ordem; scanner conhecido fornece um piso.
+SEVERITY_ORDER = {name: level for level, name in enumerate(
+    ('Informativa', 'Baixa', 'Média', 'Alta', 'Crítica'))}
+SCANNER_SEVERITIES = {
+    'CRITICAL': 'Crítica', 'HIGH': 'Alta', 'ERROR': 'Alta',
+    'MEDIUM': 'Média', 'WARNING': 'Média', 'LOW': 'Baixa',
+}
+
+
+def scanner_severity(value):
+    return SCANNER_SEVERITIES.get(value.upper(), 'Indeterminada')
+
+
 SERVICES = frozenset({'http', 'https', 'ssh', 'database', 'dokploy', 'minio', 'buildkit'})
 
 
@@ -94,6 +107,14 @@ def validate_model_proposals(message, evidence, memory, output):
                        any(a['rule_id'] == rule for a in known[r]['payload'].get('alerts', []))
                        for r in refs):
                 raise InvalidProposal('Regra sem evidência correspondente.')
+            floors = [scanner_severity(a['severity']) for r in refs
+                      if known[r]['kind'] == 'scanner'
+                      for a in known[r]['payload'].get('alerts', []) if a['rule_id'] == rule]
+            floor = max(floors, key=lambda v: SEVERITY_ORDER.get(v, -1))
+            if SEVERITY_ORDER.get(sev, -1) < SEVERITY_ORDER.get(floor, -1):
+                caveat += (' modelo discorda do scanner; manter severidade do scanner como piso'
+                           f' (modelo: {sev}; piso: {floor}).')
+                sev = floor
             key = _digest('static-llm-group', [rule, refs])
         else:
             raise InvalidProposal('Perfil não aceita hipótese.')
