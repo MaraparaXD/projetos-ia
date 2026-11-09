@@ -35,6 +35,7 @@ const eventNames = {
   task_failed: "Tarefa falhou",
   task_cancelled: "Tarefa cancelada",
   report_exported: "Relatório exportado",
+  llm_read_tool: "Consulta de metadados pelo modelo",
   interrupted_tasks_detected: "Interrupção identificada",
 };
 let current = null,
@@ -152,7 +153,8 @@ function selectFinding(h, scroll = false) {
       .map(evidenceBlock),
   );
   const trace = (h.reasoning_trace || []).slice(0, 6)
-    .map((step) => step.tool + ": " + step.reason)
+    .map((step) => step.tool + ": " + step.reason +
+      (step.model_note ? " — nota do modelo (não verificada): " + step.model_note : ""))
     .join("; ");
   $("uncertainty").textContent =
     "Origem: " + (h.origin === "llm" ? "LLM" : "regra") + ". " +
@@ -331,6 +333,8 @@ function render(data) {
       .filter(Boolean)
       .join(" · ");
     if (details) body.append(node("p", details));
+    if (d.model_note)
+      body.append(node("p", "nota do modelo (não verificada): " + d.model_note));
     li.append(time, body);
     $("events").append(li);
   });

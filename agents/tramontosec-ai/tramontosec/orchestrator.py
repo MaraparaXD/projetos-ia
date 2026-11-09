@@ -113,7 +113,7 @@ def _run(workspace: Path, project: str, provider: Provider | None = None) -> lis
                 for step in output.get('reasoning_trace', [])[:12]:
                     event(db, 'llm_read_tool', {
                         'task_id': msg.task_id, 'profile': msg.profile.value,
-                        'tool': step['tool'], 'reason': step['reason']})
+                        'tool': step['tool'], 'reason': step['reason'], 'model_note': step.get('model_note')})
                 for h in output['hypotheses']:
                     if not set(h['evidence']) <= set(msg.evidence_ids):
                         raise PermissionError('Hipótese cita evidência fora do escopo.')
@@ -215,6 +215,8 @@ def report_markdown(workspace: Path, project: str) -> str:
                 out = t['output'] or {}
                 lines += [f'- Agente {t["profile"]}: {t["status"]}; modo: {out.get("mode", "sem resultado")}.']
                 lines += [f'  - Limitação: {safe(u)}' for u in out.get('uncertainties', [])]
+                from .reports import reasoning_markdown
+                lines += reasoning_markdown(out.get('reasoning_trace', []))
                 if out.get('model_assessment'):
                     a = out['model_assessment']
                     lines += [f'  - Sugestão não confiável do modelo local: {safe(a["summary"])}',
@@ -227,8 +229,6 @@ def report_markdown(workspace: Path, project: str) -> str:
                 lines += [f'- Contraprova: {safe(c)}' for c in h['controls']]
                 if h.get('origin') == 'llm':
                     lines.append('- Sugestão de modelo não verificada; decisão exclusivamente humana.')
-                for trace_step in h.get('reasoning_trace', [])[:6]:
-                    lines.append(f'- Trilha resumida: ferramenta {safe(trace_step["tool"])}; {safe(trace_step["reason"])}')
             for rec in data['recommendations']:
                 r = rec['payload']
                 from .reports import recommendation_markdown

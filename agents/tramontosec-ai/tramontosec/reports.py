@@ -73,3 +73,19 @@ def recommendation_markdown(recommendation: dict) -> list[str]:
     if origin == 'llm':
         lines.append('- sugestão de modelo não verificada; revisão humana obrigatória.')
     return lines
+
+
+def reasoning_markdown(steps: list[dict]) -> list[str]:
+    """Saída breve para todos os perfis, inclusive Blue sem hipóteses próprias."""
+    from html import escape
+
+    def safe(value):
+        return (escape(str(value)).replace('\n', ' ').replace(chr(96), '&#96;')
+                .replace('[', '&#91;').replace(']', '&#93;'))
+
+    lines = []
+    for step in steps[:12]:
+        lines.append(f'- Trilha resumida: ferramenta {safe(step["tool"])}; {safe(step["reason"])}')
+        if step.get('model_note') is not None:
+            lines.append('- nota do modelo (não verificada): ' + safe(step['model_note']))
+    return lines

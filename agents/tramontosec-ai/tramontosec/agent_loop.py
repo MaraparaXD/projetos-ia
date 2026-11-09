@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 
+from .agent_validation import InvalidProposal, _check_text
 from .policy import allowed_read_tools, authorize_read_tool
 from .scanners import RuleAliases, model_alert_level
 
@@ -188,10 +189,15 @@ def run_agent_loop(provider, message, evidence, memory, max_steps=MAX_STEPS):
                 raise AgentLoopError('Listas finais inválidas.')
             return {'hypotheses': result['hypotheses'], 'recommendations': result['recommendations'],
                     'reasoning_trace': trace}
-        if set(result) != {'action', 'tool', 'args'} or type(result['tool']) is not str:
+        fields = {'action', 'tool', 'args'}
+        if set(result) not in (fields, fields | {'why'}) or type(result['tool']) is not str:
             raise AgentLoopError('Chamada de ferramenta fora do contrato.')
         tool = result['tool']
         response = readonly_tool(message, tool, result['args'], evidence, memory, rule_aliases)
-        trace.append({'tool': tool, 'reason': REASONS[tool]})
+        try:
+            model_note = _check_text(result.get('why'), 160)
+        except InvalidProposal:
+            model_note = None
+        trace.append({'tool': tool, 'reason': REASONS[tool], 'model_note': model_note})
         context['history'].append({'tool': tool, 'result': response})
     raise AgentLoopError('Limite de passos atingido sem resposta final.')
