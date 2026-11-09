@@ -112,7 +112,7 @@ def review_controls(message: TaskMessage, evidence: list[dict], memory: list[dic
             'mitigation': mitigation,
             'validation': validation,
             'incident_response': incident,
-            'applied': False, 'evidence': candidate['evidence'],
+            'applied': False, 'evidence': candidate['evidence'], 'origin': 'rule',
             'independent_confirmation': False,
         })
     return {'hypotheses': [], 'recommendations': recommendations}
@@ -188,13 +188,11 @@ class Specialist:
             else:
                 findings.append(candidate)
                 known[candidate['id']] = candidate
-        # Recomendações válidas do Blue complementam/substituem o baseline pelo ID,
-        # sem aceitar hipóteses rejeitadas e sem marcar controles como aplicados.
-        if model_recommendations:
-            by_id = {r['hypothesis_id']: r for r in recommendations}
-            for recommendation in model_recommendations:
-                by_id[recommendation['hypothesis_id']] = recommendation
-            recommendations = list(by_id.values())
+        # Preservar as duas origens; só consolidar duplicatas da mesma origem.
+        by_origin = {(r['hypothesis_id'], r['origin']): r for r in recommendations}
+        for recommendation in model_recommendations:
+            by_origin[(recommendation['hypothesis_id'], 'llm')] = recommendation
+        recommendations = list(by_origin.values())
         return AgentResult(message.task_id, self.profile, mode, tuple(findings), tuple(recommendations),
                            tuple(uncertainties), message.evidence_ids, assessment,
                            reasoning_trace=trace)

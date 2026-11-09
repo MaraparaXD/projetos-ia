@@ -161,17 +161,21 @@ function selectFinding(h, scroll = false) {
     (trace ? " Trilha resumida: " + trace : "");
   $("controls").replaceChildren(...h.controls.map((c) => node("li", c)));
   $("blue-advice").replaceChildren();
-  const advice = current.recommendations
+  const adviceByOrigin = new Map();
+  current.recommendations
     .filter((r) => r.hypothesis_id === h.id)
-    .at(-1);
-  if (advice) {
+    .forEach((r) => adviceByOrigin.set(r.payload.origin || "rule", r));
+  for (const advice of adviceByOrigin.values()) {
     const r = advice.payload;
+    const origin = r.origin || "rule";
     $("blue-advice").append(
-      node("h3", "Revisão Blue Team"),
+      node("h3", "Revisão Blue Team — origem: " + origin),
       node("p", r.mitigation),
       node("p", "Como validar: " + r.validation),
       node("p", "Resposta a incidente: " + r.incident_response),
     );
+    if (origin === "llm")
+      $("blue-advice").append(node("p", "sugestão de modelo não verificada"));
   }
   $("last-decision").textContent = h.reviewer
     ? `${statusNames[h.status]} por ${h.reviewer}. Justificativa: ${h.reason}`

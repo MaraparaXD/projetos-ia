@@ -131,7 +131,9 @@ def _run(workspace: Path, project: str, provider: Provider | None = None) -> lis
                                       VALUES(?,?,?,?,?,?,?)''', (h['id'], h['title'], h['severity'], json.dumps(h['evidence']),
                                                 h['uncertainty'], json.dumps(h['controls']), json.dumps([msg.profile.value])))
                 for rec in output['recommendations']:
-                    key = hashlib.sha256((msg.task_id + rec['hypothesis_id']).encode()).hexdigest()[:24]
+                    key = hashlib.sha256(json.dumps(
+                        [msg.task_id, rec['hypothesis_id'], rec.get('origin', 'rule')]
+                    ).encode()).hexdigest()[:24]
                     db.execute('INSERT INTO recommendations VALUES(?,?,?,?)',
                                (key, rec['hypothesis_id'], json.dumps(rec, ensure_ascii=False), msg.task_id))
                 db.execute("UPDATE tasks SET status='completed',output_json=?,finished_at=? WHERE id=?",
@@ -229,9 +231,8 @@ def report_markdown(workspace: Path, project: str) -> str:
                     lines.append(f'- Trilha resumida: ferramenta {safe(trace_step["tool"])}; {safe(trace_step["reason"])}')
             for rec in data['recommendations']:
                 r = rec['payload']
-                lines += ['', f'- Recomendação para `{r["hypothesis_id"]}`: {safe(r["mitigation"])}',
-                          f'- Validação: {safe(r["validation"])}; aplicada: não.',
-                          f'- Resposta a incidente: {safe(r["incident_response"])}']
+                from .reports import recommendation_markdown
+                lines += ['', *recommendation_markdown(r)]
     if not complete:
         lines += ['', 'Há etapas ou revisões pendentes. A avaliação não foi concluída.']
     return '\n'.join(lines) + '\n'

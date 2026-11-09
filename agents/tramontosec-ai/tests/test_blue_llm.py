@@ -40,8 +40,8 @@ class BlueLLMTest(unittest.TestCase):
         ]
         result = Specialist(Profile.BLUE).run(self.msg, self.evidence, self.memory, FakeProvider(steps))
         self.assertEqual(result.mode, 'local_llm_agent')
-        self.assertEqual(len(result.recommendations), 1)
-        rec = result.recommendations[0]
+        self.assertEqual(len(result.recommendations), 2)
+        rec = next(r for r in result.recommendations if r['origin'] == 'llm')
         self.assertEqual(rec['hypothesis_id'], 'h1')
         self.assertEqual(rec['origin'], 'llm')
         self.assertIs(rec['applied'], False)

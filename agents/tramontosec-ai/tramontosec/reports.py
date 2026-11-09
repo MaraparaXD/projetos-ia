@@ -54,3 +54,22 @@ def catalog_report(root: Path, doc_id: str, path: Path, scope: str, period: str 
                     'Heuristic ID discovery only; no automatic evidence or deduplication'))
     return {**result, 'scope': scope, 'format': fmt, 'historical_identifiers': ids,
             'count': len(ids), 'no_cross_report_merge': True}
+
+
+def recommendation_markdown(recommendation: dict) -> list[str]:
+    """Renderiza cada origem separadamente, inclusive registros legados."""
+    from html import escape
+
+    def safe(value):
+        return (escape(str(value)).replace('\n', ' ').replace(chr(96), '&#96;')
+                .replace('[', '&#91;').replace(']', '&#93;'))
+
+    r = recommendation
+    origin = r.get('origin', 'rule')
+    lines = [f'- Recomendação para {safe(r["hypothesis_id"])}: {safe(r["mitigation"])}',
+             f'- Origem: {safe(origin)}.',
+             f'- Validação: {safe(r["validation"])}; aplicada: não.',
+             f'- Resposta a incidente: {safe(r["incident_response"])}']
+    if origin == 'llm':
+        lines.append('- sugestão de modelo não verificada; revisão humana obrigatória.')
+    return lines
