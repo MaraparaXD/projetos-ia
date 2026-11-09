@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0 — 09/11/2026 (em desenvolvimento, experimental)
+
+- Agentes Red, Static e Blue com loop local consultivo, propostas tipadas e fallback explícito.
+- Piso de severidade do scanner e registro de divergências sem rebaixar regras.
+- Recomendações de regra e LLM preservadas separadamente, com origem e aviso na interface e relatório.
+- Filtro explícito de texto; aliases rule-N para regras livres; get_alert_summary somente leitura.
+- Static anexa equivalências como notas; agrupamentos adicionais exigem várias regras ou componentes.
+- Trilha com motivo fixo e model_note opcional, breve e não verificada; why inválido é descartado.
+- agent-check em workspace sintético temporário, cinco repetições por perfil e falhas sem simular inferência.
+- Benchmark com três cenários por perfil, repetições, motivos de fallback e mediana/máximo de tempo.
+- Testes offline de limites, transporte, leitores, CLI e DOM; cobertura mínima da CI em 91,52%.
+- Versões, documentação e indicação de desenvolvimento alinhadas; sem licença ou contato inventados.
+- Sem validação científica de detecção ou resultado real de modelo declarado.
+
 ## 0.4.0 — 04/11/2026 (Red Team, incremento experimental)
 
 - Importação de metadados passivos de infraestrutura com esquema estrito e ativos previamente autorizados.
@@ -29,9 +43,3 @@
 - Verificação de baseline Git e referências de arquivo/linha.
 - Importação de metadados sanitizados de Semgrep, Trivy, Gitleaks e Zizmor.
 - Catálogo de relatórios, correlação heurística, revisão humana e LLM local opcional.
-
-## Agentes LLM experimentais — branch feat/agentes-ia (não lançada)
-- Loop consultivo por especialista e allowlist de ferramentas de metadados.
-- Propostas tipadas e validadas, origem rule/llm, fallback determinístico.
-- Red/Static/Blue com FakeProvider, trilha resumida e benchmark sintético.
-- Não há testes ativos, confirmação automática, cloud nem remediação.

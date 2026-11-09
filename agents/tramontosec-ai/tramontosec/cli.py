@@ -13,7 +13,7 @@ from .core import make_workspace, record_document, import_findings, list_finding
 
 
 def cli() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog='tramontosec', description='TramontoSec AI v0.3 — auditoria passiva, especialistas e revisão humana')
+    parser = argparse.ArgumentParser(prog='tramontosec', description='TramontoSec AI v0.5.0 — em desenvolvimento; auditoria passiva e revisão humana')
     from . import __version__
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('--workspace', type=Path, help='Pasta local autorizada, privada e fora de sincronização')

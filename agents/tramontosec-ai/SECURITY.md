@@ -1,4 +1,4 @@
-# Segurança e fronteiras de confiança
+# Segurança e fronteiras de confiança — 0.5.0 em desenvolvimento
 
 Ferramenta local assistida para escopo autorizado. Sem testes ativos,
 scanners executados, comando de modelo, remediação ou provedor externo.
@@ -63,3 +63,42 @@ do domínio de confiança do modelo.
 Uma implementação real em máquina com Ollama exige revisão separada de
 modelo, limites de tokens e política de metadados permitidos; ainda não
 há avaliação científica em ambiente real nem direito de acesso a alvos.
+
+
+## Controles incrementais 0.5.0
+
+`rule_id` fora do regex `^[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}$` usa alias
+`rule-N` com mapa inverso somente interno e `rule_alias_used` no contexto.
+A sintaxe permitida não demonstra anonimização; um ID válido ainda pode revelar
+informação privada. Revise entradas antes de qualquer inferência local.
+
+`get_alert_summary` está restrito ao Static com efeito `read_metadata`. Conta
+alertas, severidades, arquivos e componentes sem expor caminhos, mensagens,
+trechos ou nomes. A contagem ajuda a triagem, sem provar alcance ou independência.
+
+A severidade do scanner é piso para propostas Static. Hipóteses de regra não
+são rebaixadas pelo modelo; discordâncias ficam explícitas. Equivalências são
+notas, não novos achados. Blue mantém recomendações de regra e de LLM lado a
+lado com `origin` e aviso de sugestão não verificada; nenhuma é aplicada e
+nenhuma constitui confirmação independente.
+
+O filtro explícito de `agent_validation.py` rejeita marcação, URLs, comandos,
+instruções de aprovação, controles Unicode e excesso de linhas. Pode rejeitar
+prosa legítima e não reconhece toda linguagem maliciosa. O baseline continua
+disponível por fallback. A defesa decisiva segue nas capacidades restritas,
+orçamentos e revisão humana.
+
+O `why` opcional é público e limitado a 160 caracteres, filtrado pelo mesmo
+validador. A trilha mantém motivo fixo e `model_note`, exibido como nota do
+modelo não verificada. Valor inválido é descartado isoladamente. Dados são
+escapados no Markdown e exibidos com `textContent`, inclusive se um banco
+antigo contiver texto inesperado. Não é coleta de cadeia privada de raciocínio.
+
+`agent-check` usa demonstração sintética e workspace temporário, com opt-in e
+preflight GGUF inalterado. Indisponibilidade falha de forma explícita, sem
+simulação. `fallback_reason=Classe` evita persistir detalhes da resposta em
+diagnósticos. O ensaio e o benchmark não validam detecção de vulnerabilidades.
+O limite de resposta do adaptador legado também rejeita bytes além de 32 KB.
+
+TODO: definir contato privado de segurança. TODO: escolher licença.
+Essas decisões pertencem ao mantenedor; nenhum endereço ou licença foi escolhido.

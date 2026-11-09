@@ -49,6 +49,8 @@ class DashboardTest(unittest.TestCase):
         status, headers, body = self.request('GET', '/', auth=False)
         self.assertEqual(status, 200)
         self.assertIn('TramontoSec', body)
+        self.assertIn('Em desenvolvimento', body)
+        self.assertIn('v0.5.0', body)
         self.assertIn("frame-ancestors 'none'", headers['Content-Security-Policy'])
         self.assertEqual(headers['Cache-Control'], 'no-store')
         self.assertEqual(headers['X-Content-Type-Options'], 'nosniff')
