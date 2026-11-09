@@ -57,21 +57,26 @@ Não houve experimento científico comparativo. A CI configurada usa Windows e
 Linux com Python 3.11/3.13; resultados de CI devem ser consultados na execução
 do commit publicado, sem presumir sucesso antes de sua execução.
 
-## Comparação experimental v0.5: baseline vs agentes LLM
+## Comparação sintética dos três perfis
 
-O módulo `benchmark.py` possui `compare_agent_synthetic(provider)`, que usa
-**uma fixture fictícia** em memória e um provedor injetável. Os testes empregam
-`FakeProvider`, sem Ollama e sem acesso à rede. São relatados os totais de
-hipóteses, a proporção de IDs de evidência referenciados, a taxa de fallback
-por resposta inválida e o tempo de execução com `perf_counter`. O valor
-`vulnerability_detection_validated: false` é obrigatório.
+compare_agent_synthetic(provider, repetitions=3) executa três cenários por perfil:
+empty (sem achados), ordinary e duplicates (alerta e serviço repetidos). São
+27 pares baseline/agente por padrão, 54 execuções ao todo. O provedor injetado
+é reutilizado, com contexto novo por execução; testes usam FakeProvider offline.
 
-Esse experimento verifica comportamento de software, **não precisão, recall ou
-eficácia real de detecção**. O próximo desenho científico precisa de cenários
-inéditos, ground truth independente, revisão cega, comparabilidade de modelo,
-hardware, orçamento de inferência, distribuição de tempos e intervalos de
-confiança. Logs, segredos e ativos reais não devem entrar na fixture.
+O resultado separa perfil, cenário e modo, contagens de hipóteses/recomendações
+por origem, cobertura de IDs de evidência (incluindo referências do Blue), taxa
+e classe do fallback, mediana e máximo do tempo por execução. Os totais somam
+as repetições, não representam achados únicos. No cenário vazio a cobertura é
+zero; referências não demonstram qualidade. A memória do Blue é fixa e derivada
+das regras, sem aprendizado ou acúmulo de notas entre repetições.
 
+Mantém vulnerability_detection_validated=False e limitações explícitas. Mede
+contratos, preservação do baseline, referências e comportamento operacional.
+Não mede precisão, recall, exploração, segurança de modelo real, qualidade de
+recomendações ou validade científica. Tempo de FakeProvider não estima latência
+do Ollama. Mediana/máximo não substituem intervalos de confiança, ground truth,
+cenários inéditos e revisão cega independente.
 
 ## Ensaio local de robustez dos agentes
 

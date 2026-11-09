@@ -16,16 +16,16 @@ class BenchmarkAgentTest(unittest.TestCase):
     def test_baseline_vs_agent_is_synthetic(self):
         result = compare_agent_synthetic(FakeProvider())
         self.assertFalse(result['vulnerability_detection_validated'])
-        self.assertEqual(result['samples'], 1)
+        self.assertEqual(result['samples'], 27)
         self.assertEqual(result['baseline']['hypotheses'], result['agent']['hypotheses'])
         self.assertEqual(result['agent']['mode'], 'local_llm_agent')
-        self.assertEqual(result['agent']['invalid_response_rate'], 0)
-        self.assertGreaterEqual(result['baseline']['elapsed_seconds'], 0)
+        self.assertEqual(result['agent']['fallback_rate'], 0)
+        self.assertGreaterEqual(result['baseline']['elapsed_seconds']['median'], 0)
 
     def test_invalid_provider_counts_fallback(self):
         result = compare_agent_synthetic(FakeProvider(invalid=True))
         self.assertEqual(result['agent']['mode'], 'deterministic_fallback')
-        self.assertEqual(result['agent']['invalid_response_rate'], 1)
+        self.assertEqual(result['agent']['fallback_rate'], 1)
 
 
 if __name__ == '__main__':
