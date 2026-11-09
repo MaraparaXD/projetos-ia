@@ -216,3 +216,5 @@ modelo GGUF do `agent-check` e confirmar o orçamento de passos (padrão atual: 
 O comando legado `assist-local` envia metadados do achado (título, resumo,
 classificação, severidade e incerteza). Revise a sanitização desses campos antes
 usá-lo; nomes de campos não garantem ausência de informação privada.
+
+Relatório completo por item: [revisão agentes IA v2](docs/AGENTES_IA_V2_REPORT.md).

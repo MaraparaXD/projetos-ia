@@ -128,3 +128,11 @@ passos: padrão seis turnos; API Python aceita de 1 a 12, e a CLI não o amplia.
 Revisar privacidade de identificadores, falsos positivos do filtro e utilidade
 de propostas sem reduzir os gates. Dados históricos não são apagados nem
 retroativamente aceitos. Cobertura elevada não demonstra ausência de defeitos.
+
+Relatório completo por item: [revisão agentes IA v2](AGENTES_IA_V2_REPORT.md).
+
+Repetição pós-relatório: 172 casos em 50,707 s, 171 passaram e um foi ignorado;
+Ruff All checks passed!. Uma execução anterior dessa repetição teve WinError
+10053 no teste HTTP negativo de CSRF. O caso isolado passou em 2,127 s e a
+repetição completa acima passou, sem relaxar assertivas ou modificar CSRF/CSP.
+A causa estrutural do reset local não foi estabelecida.
