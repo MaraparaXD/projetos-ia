@@ -1,4 +1,6 @@
-# TramontoSec AI — agentes locais LLM experimentais (v0.5)
+# TramontoSec AI — agentes locais LLM experimentais (v0.5.0)
+
+> **EM DESENVOLVIMENTO — versão 0.5.0 experimental.** Sem avaliação científica de detecção ou validação com um modelo real nesta entrega.
 
 Auditoria local assistida pelo Tramonto, com três especialistas sequenciais,
 políticas externas ao modelo, evidências persistentes e revisão humana.
@@ -14,7 +16,7 @@ Requisitos: Python 3.11+ e Git no PATH. Runtime somente com biblioteca padrão;
 setuptools é usado para empacotamento. PDF requer pypdf opcional.
 
 ```powershell
-git clone https://github.com/MaraparaXD/projetos-ia.git
+git clone --branch main https://github.com/MaraparaXD/projetos-ia.git
 cd projetos-ia\agents\tramontosec-ai
 py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
@@ -33,7 +35,7 @@ Requisitos: Python 3.11+ e Git. Em distribuições Linux, instale o pacote
 `python3-venv` quando necessário.
 
 ```bash
-git clone https://github.com/MaraparaXD/projetos-ia.git
+git clone --branch main https://github.com/MaraparaXD/projetos-ia.git
 cd projetos-ia/agents/tramontosec-ai
 python3 -m venv .venv
 . .venv/bin/activate
@@ -57,14 +59,34 @@ pode solicitar até seis turnos JSON por especialista, utilizar ferramentas
 - **Blue Team:** sugere mitigação, controle compensatório, validação e triagem
   para hipóteses não rejeitadas, sem aplicar qualquer mudança.
 
-O loop autoriza `list_assets`, `get_alerts`, `read_evidence`,
-`list_hypotheses` e `get_hypothesis` **por perfil**. Recebe apenas
-metadados limitados com aliases; caminhos, código, nomes reais e segredos
-não são enviados ao modelo. JSON inválido, ferramenta proibida, ID
-inventado, limite de passos e indisponibilidade do modelo resultam em
-`deterministic_fallback`. Toda sugestão continua `candidate`, não
-confirmada. O relatório registra origem e trilha resumida de ferramentas,
-não a cadeia privada de raciocínio do modelo.
+O loop autoriza `list_assets`, `get_alerts`, `get_alert_summary`,
+`read_evidence`, `list_hypotheses` e `get_hypothesis` por perfil.
+Ativos usam aliases; os campos de caminho, mensagens e trechos de código
+são omitidos do contexto. IDs sintaticamente válidos ainda exigem revisão
+de privacidade antes da importação.
+
+- Static consulta `get_alert_summary` para contar alertas, severidades,
+  arquivos e componentes por regra, sem receber seus nomes.
+- `rule_id` fora de `^[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}$` usa `rule-N`,
+  sem enviar o mapa inverso ao modelo; o contexto informa `rule_alias_used`.
+- A severidade de uma proposta Static respeita a maior severidade do scanner
+  nas regras/evidências citadas. Regras existentes conservam sua severidade;
+  discordâncias ficam registradas. `Indeterminada` não integra a ordem.
+- Propostas equivalentes viram notas no `uncertainty` da regra. Um candidato
+  Static novo exige agrupamento de várias regras ou componentes conhecidos.
+- Blue preserva recomendações `origin="rule"` e `origin="llm"` lado a lado,
+  sem aplicar mudanças. A sugestão LLM recebe aviso de modelo não verificado.
+- O filtro explícito rejeita comandos, instruções de aprovação, URLs,
+  controles Unicode e mais de duas quebras de linha. É uma heurística,
+  não uma garantia contra toda injeção.
+- `reasoning_trace` separa o motivo fixo da ferramenta do `model_note`:
+  nota breve e não verificada derivada de `why`. Uma nota inválida é descartada
+  sem invalidar a ferramenta. Não é a cadeia privada de raciocínio do modelo.
+
+JSON inválido, ferramenta proibida, referências inexistentes, orçamento
+excedido e indisponibilidade resultam em `deterministic_fallback`.
+`fallback_reason=ClasseDoErro` registra a causa sem copiar a resposta.
+Contadores de propostas validadas pelo contrato não representam aceite humano.
 
 **Status experimental:** FakeProvider comprova contratos e integração,
 não a qualidade de um Ollama real; ainda faltam avaliações empíricas,
@@ -101,6 +123,7 @@ project-create  projects        agents           audit
 plan            run             history          stage
 evidence-import baseline        analyze-local    finding-review
 task-cancel     report          models           demo       dashboard
+agent-check
 ```
 
 O novo importador `evidence-import --tool infra` aceita somente metadados
@@ -123,8 +146,9 @@ Instale modelos separadamente. O adaptador exige modelo GGUF local e bloqueia
 aliases cloud, proxies e redirects. Configure `OLLAMA_NO_CLOUD=1` **no servidor
 Ollama** e reinicie-o; uma variável na CLI não altera servidor já iniciado.
 Veja a [documentação oficial](https://docs.ollama.com/faq#how-do-i-disable-ollamas-cloud-features).
-São enviados somente metadados limitados (regras, severidades, serviços,
-controles, IDs e contagens), sem código, nomes de ativos, caminhos ou documentos.
+No loop de agentes são enviados metadados limitados (regras, severidades, serviços,
+controles, IDs e contagens). Campos de código, ativos, caminhos e documentos são omitidos;
+identificadores de regra válidos sintaticamente ainda podem conter dados privados.
 Falhas viram `deterministic_fallback`. Nenhum provedor externo é implementado.
 
 ## Compatibilidade e limites
@@ -141,15 +165,56 @@ Documentos: [arquitetura](ARCHITECTURE.md), [agentes](AGENTS.md),
 [roadmap](ROADMAP.md), [changelog](CHANGELOG.md),
 [recuperação](docs/RECOVERY.md) e [validação](docs/VALIDATION.md).
 
-## Testes da branch experimental
+## Verificação da versão em desenvolvimento
 
 ```bash
-git switch feat/agentes-ia
+git switch main
 cd agents/tramontosec-ai
 python -m unittest discover -s tests -v
 python -c "from tramontosec.benchmark import compare_agent_synthetic; print('Use FakeProvider dos testes para repetir a comparação offline.')"
 ```
 
-A API do Ollama só fica ativa mediante `--model` e
-`--ack-local-model`. Sem um modelo GGUF local verificado, teste
+A inferência exige `--model` e `--ack-local-model`. O comando `models`
+consulta somente disponibilidade e nomes de modelos locais, sem inferência. Sem um modelo GGUF local verificado, teste
 somente a execução determinística e o FakeProvider.
+
+
+## Ensaio com seu modelo local
+
+```bash
+python -m tramontosec agent-check --model NOME --ack-local-model
+```
+
+Faz cinco repetições por perfil sobre a demonstração sintética, em workspace
+temporário removido ao terminar. Não exige `--workspace`; se informado, esse
+workspace não é usado pelo ensaio. Exibe modo, motivo do fallback, passos,
+quantidades, propostas validadas e tempo por perfil. Ollama/modelo indisponível
+gera saída diferente de zero, sem simulação. A checagem GGUF original é usada.
+**O mantenedor precisa executar esse comando com seu modelo: não houve
+inferência real de LLM nesta validação.**
+
+`compare_agent_synthetic(provider, repetitions=3)` cobre três cenários por perfil,
+incluindo vazio e duplicatas, com mediana/máximo de tempo e fallback por motivo.
+Mede contratos e operação; `vulnerability_detection_validated=False` permanece.
+
+```bash
+python -m unittest discover -s tests
+ruff check .
+coverage run -m unittest discover -s tests
+coverage report --fail-under=91.52
+node --check tramontosec/web/app.js
+node tests/dashboard_rendering.cjs
+```
+
+Ruff/Coverage são ferramentas de desenvolvimento já declaradas. Node 24 é usado
+somente no teste JavaScript e na CI; o runtime Python continua somente stdlib.
+Consulte [VALIDATION](docs/VALIDATION.md) para números reais e limitações.
+
+TODO do mantenedor: escolher licença, definir contato de segurança, escolher o
+modelo GGUF do `agent-check` e confirmar o orçamento de passos (padrão atual: 6).
+
+O comando legado `assist-local` envia metadados do achado (título, resumo,
+classificação, severidade e incerteza). Revise a sanitização desses campos antes
+usá-lo; nomes de campos não garantem ausência de informação privada.
+
+Relatório completo por item: [revisão agentes IA v2](docs/AGENTES_IA_V2_REPORT.md).

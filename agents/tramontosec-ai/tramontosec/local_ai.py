@@ -52,8 +52,13 @@ def local_suggestion(workspace: Path, key: str, model: str, ack: bool) -> str:
     with opener.open(request, timeout=75) as response:
         if response.status != 200:
             raise ValueError('Local LLM endpoint returned error')
-        result = json.loads(response.read(32_000))
-    answer = json.loads(str(result.get('response', '')))
+        raw = response.read(32_001)
+        if len(raw) > 32_000:
+            raise ValueError('Local model response exceeds 32 KB')
+        result = json.loads(raw)
+    if not isinstance(result, dict) or not isinstance(result.get('response'), str):
+        raise ValueError('Local model response envelope mismatch')
+    answer = json.loads(result['response'])
     if not isinstance(answer, dict) or set(answer) != {'controles_a_conferir', 'duvidas', 'possiveis_falsos_positivos'}:
         raise ValueError('Local model response schema mismatch')
     for k in answer:

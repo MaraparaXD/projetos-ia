@@ -24,3 +24,25 @@ Conservar etapas Tramonto e pendências, sem concluir automaticamente auditoria.
 Validar com `python -m unittest discover -s tests -v`, somente dados sintéticos.
 Revisar diff e arquivos versionados antes de publicar. Runtime stdlib;
 dependências extras exigem justificativa. CLI independe do navegador.
+
+
+## Contratos 0.5.0 em desenvolvimento
+
+- Manter `get_alert_summary` somente no Static/READ_TOOLS, com `read_metadata`:
+  contagens por regra, severidades e quantidades de arquivos/componentes sem nomes.
+- Encaminhar regras livres apenas por `RuleAliases`/`rule-N` e indicar
+  `rule_alias_used`; nunca enviar o mapa inverso ou campos de caminho ao provider.
+- Preservar o piso de severidade do scanner nas propostas Static, tratando
+  `Indeterminada` à parte. Regras existentes conservam a severidade; divergências
+  e equivalências são notas no `uncertainty`, sem confirmação automática.
+- Preservar ambas as recomendações `origin="rule"` e `origin="llm"`, com aviso
+  de sugestão de modelo não verificada. Rejeitadas não recebem novas recomendações.
+  `applied` e `independent_confirmation` continuam False.
+- Aplicar o filtro explícito de texto a propostas e `why`. A nota breve validada
+  aparece como `model_note` não verificado; valor inválido vira None, sem perder
+  a ferramenta. Interface usa `textContent`; não persistir prompt ou resposta bruta.
+- Validar `agent-check` offline com FakeProvider e workspace temporário.
+  Resultado com modelo real só pode ser declarado após execução real do mantenedor.
+- O orçamento atual permanece em seis turnos por especialista; a API aceita de
+  1 a 12. Alterar o padrão depende da avaliação operacional do mantenedor.
+- Licença e contato de segurança são TODOs do mantenedor; não inventá-los.

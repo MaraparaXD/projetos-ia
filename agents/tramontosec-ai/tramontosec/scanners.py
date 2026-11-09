@@ -181,3 +181,51 @@ def triage_alert(root: Path, alert_id: str, status: str, reviewer: str, note: st
         db.execute('INSERT INTO events(event_at,finding_key,verb,details) VALUES(?,?,?,?)',
                    (now(),f'alert:{alert_id[:14]}','triage',
                     f'status={status}; reviewer={reviewer}; rationale={note[:200]}'))
+
+
+# Regra é identificador, nunca texto de instrução para o modelo.
+MODEL_RULE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}$')
+MODEL_LEVELS = frozenset({'ERROR', 'WARNING', 'INFO', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'})
+
+
+def valid_model_rule(value) -> bool:
+    return type(value) is str and MODEL_RULE.fullmatch(value) is not None
+
+
+def model_alert_level(value) -> str:
+    return value.upper() if type(value) is str and value.upper() in MODEL_LEVELS else 'UNKNOWN'
+
+
+class RuleAliases:
+    """Mapa determinístico em memória; nunca enviar o mapa inverso ao provider.
+
+    Reservar regras válidas antes de numerar evita colisão com rule-N legítima.
+    Ordenar valores torna aliases estáveis para o mesmo conjunto de evidências.
+    """
+    def __init__(self, evidence):
+        rules = {a['rule_id'] for e in evidence if e['kind'] == 'scanner'
+                 for a in e['payload'].get('alerts', [])}
+        reserved = {r for r in rules if valid_model_rule(r)}
+        self.alias_to_rule = {}
+        self.rule_to_alias = {}
+        index = 1
+        for rule in sorted(rules - reserved):
+            while 'rule-' + str(index) in reserved:
+                index += 1
+            alias = 'rule-' + str(index)
+            self.alias_to_rule[alias] = rule
+            self.rule_to_alias[rule] = alias
+            reserved.add(alias)
+            index += 1
+
+    @property
+    def used(self):
+        return bool(self.alias_to_rule)
+
+    def to_model(self, rule):
+        return self.rule_to_alias.get(rule, rule)
+
+    def resolve(self, value):
+        if not valid_model_rule(value):
+            raise ValueError('Identificador de regra inválido.')
+        return self.alias_to_rule.get(value, value)

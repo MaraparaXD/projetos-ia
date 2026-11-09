@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from enum import Enum
 import re
-from typing import Any
+from typing import Any, TypedDict
 
 
 class Profile(str, Enum):
@@ -56,6 +56,13 @@ class TaskMessage:
         return asdict(self)
 
 
+class ReasoningStep(TypedDict):
+    """Justificativa fixa da ferramenta e nota breve, pública e não verificada."""
+    tool: str
+    reason: str
+    model_note: str | None
+
+
 @dataclass(frozen=True)
 class AgentResult:
     task_id: str
@@ -67,7 +74,10 @@ class AgentResult:
     evidence_ids: tuple[str, ...]
     model_assessment: dict | None = None
     schema: str = 'tramontosec.result.v1'
-    reasoning_trace: tuple[dict, ...] = ()
+    reasoning_trace: tuple[ReasoningStep, ...] = ()
+    steps_used: int = 0
+    validated_hypotheses: int = 0
+    validated_recommendations: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)

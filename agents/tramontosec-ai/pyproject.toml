@@ -4,9 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tramontosec-ai"
-version = "0.4.0"
+version = "0.5.0"
 description = "Auditoria local pelo Tramonto com três especialistas e revisão humana"
 requires-python = ">=3.11"
+classifiers = ["Development Status :: 3 - Alpha"]
 dependencies = []
 
 [project.optional-dependencies]

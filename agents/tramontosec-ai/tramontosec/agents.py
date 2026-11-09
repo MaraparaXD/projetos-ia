@@ -5,11 +5,12 @@ import hashlib
 import json
 
 from .contracts import AgentResult, Profile, TaskMessage
-from .agent_loop import AgentLoopError, run_agent_loop
-from .agent_validation import InvalidProposal, validate_model_proposals
+from .agent_loop import AgentLoopError, _service_name, run_agent_loop
+from .agent_validation import InvalidProposal, scanner_severity, validate_model_proposals
 from .policy import authorize, check_message
 from .red_team import analyze_infra
 from .providers import Provider, ProviderError, validate_assessment
+from .scanners import RuleAliases, model_alert_level
 
 
 def hypothesis(kind: str, identity: list, title: str, severity: str,
@@ -67,7 +68,7 @@ def analyze_static(message: TaskMessage, evidence: list[dict], memory: list[dict
             candidates.append(hypothesis(
                 'static', [alert['rule_id'], alert['location'], alert['line'], alert['component'], data['commit']],
                 f'Revisar {alert["rule_id"]} em {alert["location"]}:{alert["line"] or "?"}',
-                {'CRITICAL': 'Crítica', 'HIGH': 'Alta', 'MEDIUM': 'Média', 'LOW': 'Baixa'}.get(alert['severity'].upper(), 'Indeterminada'),
+                scanner_severity(alert['severity']),
                 item['id'], ['Inspecionar caminho alcançável, autenticação e autorização.',
                              'Conferir versão implantada, sanitização e falso positivo.'],
                 'Alerta de ferramenta não confirma vulnerabilidade. '
@@ -112,7 +113,7 @@ def review_controls(message: TaskMessage, evidence: list[dict], memory: list[dic
             'mitigation': mitigation,
             'validation': validation,
             'incident_response': incident,
-            'applied': False, 'evidence': candidate['evidence'],
+            'applied': False, 'evidence': candidate['evidence'], 'origin': 'rule',
             'independent_confirmation': False,
         })
     return {'hypotheses': [], 'recommendations': recommendations}
@@ -132,36 +133,48 @@ class Specialist:
             raise PermissionError('Evidências ou perfil não correspondem ao contrato.')
         assessment, uncertainties = None, ['Concordância entre especialistas não constitui evidência independente.']
         model_hypotheses, model_recommendations, trace = [], [], ()
+        steps_used = validated_hypotheses = validated_recommendations = 0
         mode = 'deterministic'
         selected = list(message.allowed_tools)
         if provider and callable(getattr(provider, 'agent_step', None)):
             try:
                 raw = run_agent_loop(provider, message, evidence, memory)
+                steps_used = raw['steps_used']
+                trace = tuple(raw['reasoning_trace'])
                 parsed = validate_model_proposals(message, evidence, memory, raw)
                 model_hypotheses, model_recommendations = parsed['hypotheses'], parsed['recommendations']
-                trace = tuple(raw['reasoning_trace'])
+                validated_hypotheses = len(parsed['hypotheses'])
+                validated_recommendations = len(parsed['recommendations'])
                 mode = 'local_llm_agent'
             except (AgentLoopError, InvalidProposal, PermissionError, ProviderError,
-                    OSError, TimeoutError, TypeError, KeyError, RecursionError, StopIteration):
+                    OSError, TimeoutError, TypeError, KeyError, RecursionError, StopIteration) as exc:
+                steps_used = getattr(exc, 'steps_used', steps_used)
+                trace = getattr(exc, 'reasoning_trace', trace)
+                uncertainties.append('fallback_reason=' + type(exc).__name__)
                 uncertainties.append('Proposta LLM inválida ou bloqueada; regras determinísticas preservadas.')
                 mode = 'deterministic_fallback'
         elif provider:
             # Omit objective text, asset identifiers, file paths and source. Only counts/IDs go to Ollama.
+            rule_aliases = RuleAliases(evidence)
             meta = {'profile': self.profile.value, 'stage': message.stage,
                     'evidence': [{'id': e['id'], 'kind': e['kind'],
                                   'alert_count': len(e['payload'].get('alerts', [])),
-                                  'rules': [{'rule': a['rule_id'], 'severity': a['severity']} for a in e['payload'].get('alerts', [])[:20]],
-                                  'surfaces': [{'services': [v if isinstance(v, str) else v.get('name', 'other')
+                                  'rules': [{'rule': rule_aliases.to_model(a['rule_id']), 'severity': model_alert_level(a['severity'])} for a in e['payload'].get('alerts', [])[:20]],
+                                  'surfaces': [{'services': [_service_name(v)
                                                                for v in a.get('services', [])[:30]],
-                                                'declared_controls': a.get('controls', [])}
+                                                'declared_controls': [c for c in a.get('controls', [])[:20]
+                                                                      if c in {'tls', 'mfa', 'network_acl', 'waf', 'logging', 'unknown'}]}
                                                for a in e['payload'].get('assets', [])[:20]],
                                   'asset_count': len(e['payload'].get('assets', []))} for e in evidence[:100]],
                     'candidate_count': len(memory), 'allowed_tools': selected}
+            if rule_aliases.used:
+                meta['rule_alias_used'] = True
             try:
                 assessment = validate_assessment(provider.assess(message, meta), message)
                 mode = 'local_llm_assisted'
                 # Parecer consultivo: o modelo não determina o conjunto de regras executadas.
-            except (ProviderError, OSError, TimeoutError):
+            except (ProviderError, OSError, TimeoutError) as exc:
+                uncertainties.append('fallback_reason=' + type(exc).__name__)
                 uncertainties.append('Provedor falhou ou retornou dados inválidos. Sem inferência utilizável; fallback determinístico.')
                 mode = 'deterministic_fallback'
         else:
@@ -177,19 +190,26 @@ class Specialist:
         for candidate in findings:
             candidate.setdefault('origin', 'rule')
         for candidate in model_hypotheses:
-            existing = known.get(candidate['id'])
-            if existing:
-                existing['uncertainty'] += ' O modelo propôs hipótese equivalente; sugestão não verificada.'
+            merge_ids = candidate.pop('_baseline_ids', [candidate['id']])
+            matches = [known[key] for key in merge_ids if key in known]
+            if matches:
+                for existing in matches:
+                    existing['uncertainty'] += (' O modelo propôs hipótese equivalente; sugestão não verificada. '
+                                                + candidate['title'] + ': ' + candidate['uncertainty'])
+                    if candidate['severity'] != existing['severity']:
+                        existing['uncertainty'] += (f' Modelo discordou da severidade da regra: '
+                                                    f'{candidate["severity"]}; regra preservada: '
+                                                    f'{existing["severity"]}.')
             else:
                 findings.append(candidate)
                 known[candidate['id']] = candidate
-        # Recomendações válidas do Blue complementam/substituem o baseline pelo ID,
-        # sem aceitar hipóteses rejeitadas e sem marcar controles como aplicados.
-        if model_recommendations:
-            by_id = {r['hypothesis_id']: r for r in recommendations}
-            for recommendation in model_recommendations:
-                by_id[recommendation['hypothesis_id']] = recommendation
-            recommendations = list(by_id.values())
+        # Preservar as duas origens; só consolidar duplicatas da mesma origem.
+        by_origin = {(r['hypothesis_id'], r['origin']): r for r in recommendations}
+        for recommendation in model_recommendations:
+            by_origin[(recommendation['hypothesis_id'], 'llm')] = recommendation
+        recommendations = list(by_origin.values())
         return AgentResult(message.task_id, self.profile, mode, tuple(findings), tuple(recommendations),
                            tuple(uncertainties), message.evidence_ids, assessment,
-                           reasoning_trace=trace)
+                           reasoning_trace=trace, steps_used=steps_used,
+                           validated_hypotheses=validated_hypotheses,
+                           validated_recommendations=validated_recommendations)

@@ -149,6 +149,8 @@ def snapshot(workspace: Path, project: str) -> dict:
         item['reasoning_trace'] = trace_by_id.get(item['id'], [])[:6]
     for item in tables['recommendations']:
         item['payload'] = json.loads(item['payload'])
+        item['payload'].setdefault('origin', 'rule')
+        item['origin'] = item['payload']['origin']
     for item in tables['runtime_events']:
         item['details'] = json.loads(item['details'])
     return {'project': info, **tables}

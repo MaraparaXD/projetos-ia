@@ -1,4 +1,4 @@
-# Arquitetura v0.3 com incremento Red Team v0.4
+# Arquitetura 0.5.0 — em desenvolvimento
 
 ```text
 CLI ──────────┐
@@ -71,12 +71,13 @@ escopos: a CLI legada consulta o workspace histórico e os projetos novos
 utilizam `<workspace>/projects/<id>/`. Ambos podem coexistir no mesmo
 workspace, mas evidências, gates e decisões de cada camada não se misturam.
 
-## Especialização LLM experimental (branch feat/agentes-ia)
+## Especialização LLM experimental 0.5.0
 
-O `agent_loop.py` controla no máximo seis iterações com respostas JSON
+O `agent_loop.py` usa por padrão até seis iterações com respostas JSON
 `action=tool|final`. `policy.READ_TOOLS` limita consultas por perfil.
 Os dados vêm de evidências importadas e memória em SQLite, exclusivamente
-via representação sanitizada sem nomes de ativos, IPs, caminhos e código.
+via representação de metadados: aliases de ativos e omissão dos campos de
+caminho, mensagem e código. Identificadores válidos não provam anonimização.
 `agent_validation.py` rederiva IDs estáveis e valida referências, escopo,
 severidade, tamanho, estados e lista de campos; nenhuma string do modelo
 vira comando, autorização, decisão ou correção.
@@ -89,8 +90,59 @@ registrando `deterministic_fallback`. Problemas de infraestrutura internos
 continuam gerando falha de tarefa, sem ocultá-la.
 
 Os `runtime_events` guardam o nome da ferramenta consultiva e um motivo
-predefinido, sem prompt bruto nem cadeia de raciocínio. As saídas versionadas
+predefinido e model_note opcional validado, sem prompt bruto nem cadeia privada de raciocínio. As saídas versionadas
 guardam `reasoning_trace` curto e `origin=rule|llm`; snapshots e relatório
 derivam a origem desses resultados, sem alteração destrutiva do esquema
 legado. Hipóteses seguem `candidate`; somente o auditor pode aprovar.
 A análise do benchmark sintético **não** atesta qualidade de detecção.
+
+
+## Contratos e persistência 0.5.0
+
+`get_alert_summary` pertence somente ao Static em `READ_TOOLS`, com efeito
+`read_metadata`; `TOOLS` e gates humanos não foram ampliados. Recebe `{}` ou
+`{"rule": ID}` e retorna por regra contagens de alertas, arquivos e componentes
+distintos e severidades enumeradas. Até 100 regras são devolvidas; `truncated`
+e `rule_count` informam o corte. Contagens abrangem todos os alertas importados;
+campos de caminho, mensagem, trecho e nomes de componentes não saem da ferramenta.
+
+`RuleAliases` reserva IDs válidos antes de numerar `rule-N`, evitando colisões.
+O mapa alias → ID original fica em memória local. O contexto recebe
+`rule_alias_used=true` quando necessário. Filtros e propostas aceitam aliases ou
+IDs que respeitem `^[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}$`. O modelo consultivo
+legado recebe os mesmos aliases e vocabulários fechados.
+
+Static aceita `rule` ou `rules` (até dez) e valida cada regra e evidência citada.
+CRITICAL → Crítica; HIGH/ERROR → Alta; MEDIUM/WARNING → Média; LOW → Baixa.
+`Indeterminada` fica fora da ordem. A maior severidade conhecida é piso da
+proposta LLM. Equivalências de uma regra sem componentes adicionais viram notas
+no `uncertainty` das hipóteses de regra; a severidade dessas regras é preservada.
+Mais de uma regra ou componente conhecido permite um candidato adicional.
+IDs históricos de agrupamentos de uma regra são preservados. O orquestrador
+atualiza a nota da execução atual; saídas de tarefas preservam o histórico.
+
+Blue usa a identidade (tarefa, hipótese, origem) para recomendações novas.
+A tabela anterior possui somente PK por ID derivado; não exige migração
+destrutiva. Payload sem origem é lido como `origin="rule"`. Relatório mostra
+cada registro; dashboard mostra a recomendação mais recente de cada origem.
+As duas origens conservam `applied=False` e `independent_confirmation=False`.
+Hipóteses rejeitadas não recebem novas recomendações.
+
+Um passo de ferramenta aceita `{action, tool, args}` ou a variante com `why`.
+O filtro de propostas também valida `why` (1–160 caracteres). Valor inválido
+vira `model_note=None` sem descartar a consulta. A trilha registra ferramenta,
+motivo fixo e a nota pública não verificada; os totais de passos incluem
+tentativas de inferência e a resposta final. Os campos novos de AgentResult
+são aditivos, com defaults para compatibilidade.
+
+`agent-check` faz preflight com a checagem GGUF existente e cinco repetições
+por perfil, sequenciais, em workspace temporário. O tempo inclui orquestração.
+`fallback_reason=Classe` não inclui texto do modelo. Erro do adaptador durante
+o ensaio também resulta em saída não zero. A API Python aceita factory de
+provider para testes; a CLI não oferece um modo de simular Ollama.
+
+O filtro de texto enumera comandos e instruções, URLs, caracteres de controle
+e excesso de linhas. Não substitui a allowlist, o orçamento, os gates ou revisão
+humana. `model_note` e recomendações são renderizados com `textContent` e
+escapados no Markdown. `compare_agent_synthetic` mede operação e referências;
+`vulnerability_detection_validated=False` é obrigatório.

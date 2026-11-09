@@ -113,7 +113,7 @@ def _run(workspace: Path, project: str, provider: Provider | None = None) -> lis
                 for step in output.get('reasoning_trace', [])[:12]:
                     event(db, 'llm_read_tool', {
                         'task_id': msg.task_id, 'profile': msg.profile.value,
-                        'tool': step['tool'], 'reason': step['reason']})
+                        'tool': step['tool'], 'reason': step['reason'], 'model_note': step.get('model_note')})
                 for h in output['hypotheses']:
                     if not set(h['evidence']) <= set(msg.evidence_ids):
                         raise PermissionError('Hipótese cita evidência fora do escopo.')
@@ -122,8 +122,8 @@ def _run(workspace: Path, project: str, provider: Provider | None = None) -> lis
                         references = sorted(set(json.loads(previous['evidence_json']) + h['evidence']))
                         profiles = sorted(set(json.loads(previous['profiles_json']) + [msg.profile.value]))
                         changed = references != sorted(json.loads(previous['evidence_json']))
-                        db.execute('UPDATE hypotheses SET evidence_json=?,profiles_json=? WHERE id=?',
-                                   (json.dumps(references), json.dumps(profiles), h['id']))
+                        db.execute('UPDATE hypotheses SET evidence_json=?,profiles_json=?,uncertainty=? WHERE id=?',
+                                   (json.dumps(references), json.dumps(profiles), h['uncertainty'], h['id']))
                         if changed:
                             db.execute("UPDATE hypotheses SET status='candidate',reviewer=NULL,reason=NULL,reviewed_at=NULL WHERE id=?", (h['id'],))
                     else:
@@ -131,7 +131,9 @@ def _run(workspace: Path, project: str, provider: Provider | None = None) -> lis
                                       VALUES(?,?,?,?,?,?,?)''', (h['id'], h['title'], h['severity'], json.dumps(h['evidence']),
                                                 h['uncertainty'], json.dumps(h['controls']), json.dumps([msg.profile.value])))
                 for rec in output['recommendations']:
-                    key = hashlib.sha256((msg.task_id + rec['hypothesis_id']).encode()).hexdigest()[:24]
+                    key = hashlib.sha256(json.dumps(
+                        [msg.task_id, rec['hypothesis_id'], rec.get('origin', 'rule')]
+                    ).encode()).hexdigest()[:24]
                     db.execute('INSERT INTO recommendations VALUES(?,?,?,?)',
                                (key, rec['hypothesis_id'], json.dumps(rec, ensure_ascii=False), msg.task_id))
                 db.execute("UPDATE tasks SET status='completed',output_json=?,finished_at=? WHERE id=?",
@@ -213,6 +215,8 @@ def report_markdown(workspace: Path, project: str) -> str:
                 out = t['output'] or {}
                 lines += [f'- Agente {t["profile"]}: {t["status"]}; modo: {out.get("mode", "sem resultado")}.']
                 lines += [f'  - Limitação: {safe(u)}' for u in out.get('uncertainties', [])]
+                from .reports import reasoning_markdown
+                lines += reasoning_markdown(out.get('reasoning_trace', []))
                 if out.get('model_assessment'):
                     a = out['model_assessment']
                     lines += [f'  - Sugestão não confiável do modelo local: {safe(a["summary"])}',
@@ -225,13 +229,10 @@ def report_markdown(workspace: Path, project: str) -> str:
                 lines += [f'- Contraprova: {safe(c)}' for c in h['controls']]
                 if h.get('origin') == 'llm':
                     lines.append('- Sugestão de modelo não verificada; decisão exclusivamente humana.')
-                for trace_step in h.get('reasoning_trace', [])[:6]:
-                    lines.append(f'- Trilha resumida: ferramenta {safe(trace_step["tool"])}; {safe(trace_step["reason"])}')
             for rec in data['recommendations']:
                 r = rec['payload']
-                lines += ['', f'- Recomendação para `{r["hypothesis_id"]}`: {safe(r["mitigation"])}',
-                          f'- Validação: {safe(r["validation"])}; aplicada: não.',
-                          f'- Resposta a incidente: {safe(r["incident_response"])}']
+                from .reports import recommendation_markdown
+                lines += ['', *recommendation_markdown(r)]
     if not complete:
         lines += ['', 'Há etapas ou revisões pendentes. A avaliação não foi concluída.']
     return '\n'.join(lines) + '\n'
