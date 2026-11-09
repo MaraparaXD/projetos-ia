@@ -7,6 +7,7 @@ import re
 import unicodedata
 
 from .contracts import Profile, text
+from .scanners import RuleAliases
 
 SEVERITIES = frozenset({'Crítica', 'Alta', 'Média', 'Baixa', 'Informativa', 'Indeterminada'})
 # Indeterminada não participa da ordem; scanner conhecido fornece um piso.
@@ -129,9 +130,10 @@ def validate_model_proposals(message, evidence, memory, output):
         elif message.profile == Profile.STATIC:
             if set(proposal) != {'rule', 'evidence_ids', 'severity', 'title', 'uncertainty'}:
                 raise InvalidProposal('Contrato Static inválido.')
-            rule = proposal['rule']
-            if type(rule) is not str or not 1 <= len(rule) <= 160:
-                raise InvalidProposal('Regra inválida.')
+            try:
+                rule = RuleAliases(evidence).resolve(proposal['rule'])
+            except ValueError as exc:
+                raise InvalidProposal('Regra inválida.') from exc
             if not any(known[r]['kind'] == 'scanner' and
                        any(a['rule_id'] == rule for a in known[r]['payload'].get('alerts', []))
                        for r in refs):

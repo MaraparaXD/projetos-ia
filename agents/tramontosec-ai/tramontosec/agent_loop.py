@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 
 from .policy import allowed_read_tools, authorize_read_tool
+from .scanners import RuleAliases, model_alert_level
 
 
 MAX_STEPS = 6
@@ -44,7 +45,7 @@ def _summary_evidence(record):
     }
 
 
-def readonly_tool(message, name, args, evidence, memory):
+def readonly_tool(message, name, args, evidence, memory, rule_aliases=None):
     """Executa exclusivamente transformação em memória: não aceita texto livre."""
     authorize_read_tool(message.profile, name)
     if type(args) is not dict:
@@ -73,9 +74,13 @@ def readonly_tool(message, name, args, evidence, memory):
             raise AgentLoopError('Filtro desconhecido.')
         rule = args.get('rule')
         severity = args.get('severity')
-        if rule is not None and (type(rule) is not str or len(rule) > 160 or not rule.replace('-', '').replace('_', '').replace('.', '').isalnum()):
-            raise AgentLoopError('Regra de filtro inválida.')
-        if severity is not None and severity not in {'ERROR', 'WARNING', 'INFO', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'}:
+        rule_aliases = rule_aliases or RuleAliases(evidence)
+        if rule is not None:
+            try:
+                rule = rule_aliases.resolve(rule)
+            except ValueError as exc:
+                raise AgentLoopError('Regra de filtro inválida.') from exc
+        if severity is not None and (type(severity) is not str or severity not in {'ERROR', 'WARNING', 'INFO', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'}):
             raise AgentLoopError('Severidade de filtro inválida.')
         alerts = []
         for record in evidence:
@@ -84,10 +89,10 @@ def readonly_tool(message, name, args, evidence, memory):
             for alert in record['payload'].get('alerts', [])[:100]:
                 if rule is not None and alert['rule_id'] != rule:
                     continue
-                if severity is not None and alert['severity'] != severity:
+                if severity is not None and model_alert_level(alert['severity']) != severity:
                     continue
-                alerts.append({'evidence_id': record['id'], 'rule': alert['rule_id'],
-                               'severity': alert['severity']})
+                alerts.append({'evidence_id': record['id'], 'rule': rule_aliases.to_model(alert['rule_id']),
+                               'severity': model_alert_level(alert['severity'])})
         return {'alerts': alerts[:100]}
     if name == 'read_evidence':
         if set(args) != {'id'} or type(args['id']) is not str:
@@ -122,6 +127,7 @@ def run_agent_loop(provider, message, evidence, memory, max_steps=MAX_STEPS):
     if type(max_steps) is not int or not 1 <= max_steps <= 12:
         raise AgentLoopError('Limite de passos inválido.')
     trace = []
+    rule_aliases = RuleAliases(evidence)
     context = {
         'schema': 'tramontosec.loop.v1', 'profile': message.profile.value,
         'scope': 'metadados_sanitizados_offline', 'max_steps': max_steps,
@@ -131,6 +137,8 @@ def run_agent_loop(provider, message, evidence, memory, max_steps=MAX_STEPS):
                         'status': h.get('status', 'candidate')} for h in memory[:100]],
         'history': [],
     }
+    if rule_aliases.used:
+        context['rule_alias_used'] = True
     for _ in range(max_steps):
         if len(json.dumps(context, ensure_ascii=False)) > MAX_CONTEXT_CHARS:
             raise AgentLoopError('Contexto do modelo ultrapassou o orçamento.')
@@ -151,7 +159,7 @@ def run_agent_loop(provider, message, evidence, memory, max_steps=MAX_STEPS):
         if set(result) != {'action', 'tool', 'args'} or type(result['tool']) is not str:
             raise AgentLoopError('Chamada de ferramenta fora do contrato.')
         tool = result['tool']
-        response = readonly_tool(message, tool, result['args'], evidence, memory)
+        response = readonly_tool(message, tool, result['args'], evidence, memory, rule_aliases)
         trace.append({'tool': tool, 'reason': REASONS[tool]})
         context['history'].append({'tool': tool, 'result': response})
     raise AgentLoopError('Limite de passos atingido sem resposta final.')

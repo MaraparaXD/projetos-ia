@@ -5,11 +5,12 @@ import hashlib
 import json
 
 from .contracts import AgentResult, Profile, TaskMessage
-from .agent_loop import AgentLoopError, run_agent_loop
+from .agent_loop import AgentLoopError, _service_name, run_agent_loop
 from .agent_validation import InvalidProposal, scanner_severity, validate_model_proposals
 from .policy import authorize, check_message
 from .red_team import analyze_infra
 from .providers import Provider, ProviderError, validate_assessment
+from .scanners import RuleAliases, model_alert_level
 
 
 def hypothesis(kind: str, identity: list, title: str, severity: str,
@@ -147,16 +148,20 @@ class Specialist:
                 mode = 'deterministic_fallback'
         elif provider:
             # Omit objective text, asset identifiers, file paths and source. Only counts/IDs go to Ollama.
+            rule_aliases = RuleAliases(evidence)
             meta = {'profile': self.profile.value, 'stage': message.stage,
                     'evidence': [{'id': e['id'], 'kind': e['kind'],
                                   'alert_count': len(e['payload'].get('alerts', [])),
-                                  'rules': [{'rule': a['rule_id'], 'severity': a['severity']} for a in e['payload'].get('alerts', [])[:20]],
-                                  'surfaces': [{'services': [v if isinstance(v, str) else v.get('name', 'other')
+                                  'rules': [{'rule': rule_aliases.to_model(a['rule_id']), 'severity': model_alert_level(a['severity'])} for a in e['payload'].get('alerts', [])[:20]],
+                                  'surfaces': [{'services': [_service_name(v)
                                                                for v in a.get('services', [])[:30]],
-                                                'declared_controls': a.get('controls', [])}
+                                                'declared_controls': [c for c in a.get('controls', [])[:20]
+                                                                      if c in {'tls', 'mfa', 'network_acl', 'waf', 'logging', 'unknown'}]}
                                                for a in e['payload'].get('assets', [])[:20]],
                                   'asset_count': len(e['payload'].get('assets', []))} for e in evidence[:100]],
                     'candidate_count': len(memory), 'allowed_tools': selected}
+            if rule_aliases.used:
+                meta['rule_alias_used'] = True
             try:
                 assessment = validate_assessment(provider.assess(message, meta), message)
                 mode = 'local_llm_assisted'
